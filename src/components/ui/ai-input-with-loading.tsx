@@ -17,6 +17,7 @@ interface AIInputWithLoadingProps {
   onSubmit?: (value: string) => void | Promise<void>;
   className?: string;
   autoAnimate?: boolean;
+  disabled?: boolean;
 }
 
 export function AIInputWithLoading({
@@ -28,7 +29,8 @@ export function AIInputWithLoading({
   thinkingDuration = 1000,
   onSubmit,
   className,
-  autoAnimate = false
+  autoAnimate = false,
+  disabled = false
 }: AIInputWithLoadingProps) {
   const [inputValue, setInputValue] = useState("");
   const [submitted, setSubmitted] = useState(autoAnimate);
@@ -59,7 +61,7 @@ export function AIInputWithLoading({
   }, [isAnimating, loadingDuration, thinkingDuration]);
 
   const handleSubmit = async () => {
-    if (!inputValue.trim() || submitted) return;
+    if (!inputValue.trim() || submitted || disabled) return;
     
     setSubmitted(true);
     await onSubmit?.(inputValue);
@@ -97,7 +99,7 @@ export function AIInputWithLoading({
                 handleSubmit();
               }
             }}
-            disabled={submitted}
+            disabled={submitted || disabled}
           />
           <button
             onClick={handleSubmit}
@@ -106,7 +108,7 @@ export function AIInputWithLoading({
               submitted ? "bg-none" : "bg-black/5 dark:bg-white/5"
             )}
             type="button"
-            disabled={submitted}
+            disabled={submitted || disabled}
           >
             {submitted ? (
               <div

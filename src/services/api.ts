@@ -184,6 +184,7 @@ export const conversationService = {
 // Mock responses for common questions
 const mockResponses: Record<string, string> = {
   'what is the capital of france?': 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
+  'what is the capital of france and its attractions?': 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
   'who are you?': 'I am an AI assistant created by MOURITech using the Agentic Framework. I can help answer questions, analyze information, and assist with various tasks through conversation.',
   'hello': 'Hello! How can I assist you today?',
   'hi': 'Hi there! How can I help you?',
@@ -193,6 +194,7 @@ const mockResponses: Record<string, string> = {
 // Mock compositions for common questions
 const requestCompositions: Record<string, string> = {
   'what is the capital of france?': 'Find_Attractions(Find_Capital("France"))',
+  'what is the capital of france and its attractions?': 'Find_Attractions(Find_Capital("France"))',
   'who are you?': 'Identify_Self() -> Describe_Capabilities() -> Format_Response()',
   'hello': 'Greeting_Response(context=None)',
   'hi': 'Greeting_Response(context=None)',
@@ -202,5 +204,6 @@ const requestCompositions: Record<string, string> = {
 // Mock raw results for common questions
 const rawResults: Record<string, string> = {
   'what is the capital of france?': 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
+  'what is the capital of france and its attractions?': 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
   'how does the agentic framework work?': 'Components: [Task Decomposition, Tool Selection, Reasoning Engine, Response Enhancement] | Process: Sequential with feedback loops | Metrics: Latency=0.8s, Tokens=[input:15, output:42]',
 };

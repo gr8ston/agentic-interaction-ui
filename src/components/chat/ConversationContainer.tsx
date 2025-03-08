@@ -35,20 +35,20 @@ export function ConversationContainer() {
         },
         verbose: {
           promptForComposition: 'hi',
-          composition: 'Let me think about how to respond to this question... I\'ll need to consider the context and provide a helpful, accurate answer based on the information I have. I should break down my reasoning step by step to ensure my response is well-structured and logical.',
+          composition: 'Greeting_Response(context=None)',
           promptForEnhancedResponse: 'Question: hi\n\nPlease reason step by step and then provide the final answer.',
         },
       },
       {
         id: 'user-example-2',
         role: 'user',
-        content: 'What is the capital of France?',
+        content: 'what is the capital of france and its attractions',
         timestamp: new Date().toISOString(),
       },
       {
         id: 'agent-example-2',
         role: 'agent',
-        content: 'Paris is the capital of France. Its attractions are Eiffel Tower, Louvre Museum, etc.',
+        content: 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
         timestamp: new Date().toISOString(),
         metrics: {
           latency: 0.85,
@@ -58,9 +58,9 @@ export function ConversationContainer() {
           },
         },
         verbose: {
-          promptForComposition: 'You are a composition expert. User asked: What is the capital of France? ..........',
+          promptForComposition: 'You are a composition expert. User asked: What is the capital of France and its attractions? ..........',
           composition: 'Find_Attractions(Find_Capital("France"))',
-          rawResults: 'Paris | Eiffel Tower, Louvre Museum',
+          rawResults: 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
           promptForEnhancedResponse: 'Based on the raw results, and the users question.... provide answer in a concierge manner.',
         },
       },
