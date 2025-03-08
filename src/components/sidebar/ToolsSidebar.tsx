@@ -73,11 +73,13 @@ export function ToolsSidebar({ collapsed, setCollapsed }: ToolsSidebarProps) {
 
   return (
     <div className={cn(
-      "transition-all duration-300 ease-in-out border-r bg-white h-full flex flex-col",
-      collapsed ? "w-[60px]" : "w-[280px]"
+      "transition-all duration-300 ease-in-out border-r bg-white h-full flex flex-col z-20",
+      collapsed ? "w-[60px]" : "w-[240px] md:w-[280px]",
+      collapsed ? "" : "absolute md:relative",  // Make sidebar overlay on mobile when expanded
+      collapsed ? "relative" : ""
     )}>
-      <div className="p-4 flex items-center justify-between">
-        {!collapsed && <h2 className="font-semibold text-lg text-brand-primary">Tools</h2>}
+      <div className="p-3 md:p-4 flex items-center justify-between">
+        {!collapsed && <h2 className="font-semibold text-base md:text-lg text-brand-primary">Tools</h2>}
         <Button
           variant="ghost"
           size="icon"
@@ -90,7 +92,7 @@ export function ToolsSidebar({ collapsed, setCollapsed }: ToolsSidebarProps) {
       
       <Separator />
       
-      <div className="p-3 flex-1 overflow-y-auto">
+      <div className="p-2 md:p-3 flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
@@ -118,7 +120,7 @@ export function ToolsSidebar({ collapsed, setCollapsed }: ToolsSidebarProps) {
                     collapsed ? "justify-center" : ""
                   )}
                 >
-                  <div className="flex items-center justify-center bg-brand-light text-brand-primary rounded-md h-10 w-10 transition-colors group-hover:bg-brand-primary group-hover:text-white">
+                  <div className="flex items-center justify-center bg-brand-light text-brand-primary rounded-md h-9 w-9 md:h-10 md:w-10 transition-colors group-hover:bg-brand-primary group-hover:text-white">
                     <Icon size={18} />
                   </div>
                   
