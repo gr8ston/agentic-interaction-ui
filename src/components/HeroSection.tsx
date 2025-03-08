@@ -1,9 +1,11 @@
+
 import { LoginDrawer } from "@/components/LoginDrawer";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Button } from "@/components/ui/button";
 import { Rocket, Zap, Brain, BarChart } from "lucide-react";
 import React, { useState } from "react";
 import { ComparisonChart } from "@/components/ComparisonChart";
+
 export function HeroSection() {
   const [showComparison, setShowComparison] = useState(false);
   return <BackgroundPaths title="mAI AgenticFramework">
@@ -48,7 +50,7 @@ export function HeroSection() {
             <h3 className="text-lg md:text-xl font-semibold mb-2 text-brand-primary">Ultra Efficient</h3>
             <p className="text-sm md:text-base text-gray-600 mb-3">Optimized resource utilization for maximum performance with minimal consumption.</p>
             <div className="bg-brand-light/50 py-2 px-3 rounded-lg">
-              <p className="text-xs md:text-sm font-medium text-brand-primary"> 50% fewer tokens</p>
+              <p className="text-xs md:text-sm font-medium text-brand-primary"> 50% fewer tokens</p>
             </div>
           </div>
         </div>
