@@ -2,9 +2,10 @@
 import { LoginDrawer } from "@/components/LoginDrawer";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Button } from "@/components/ui/button";
-import { Rocket, Zap, Brain, BarChart } from "lucide-react";
+import { Rocket, Zap, Brain, BarChart, LineChart } from "lucide-react";
 import React, { useState } from "react";
 import { ComparisonChart } from "@/components/ComparisonChart";
+import { Link } from "react-router-dom";
 
 export function HeroSection() {
   const [showComparison, setShowComparison] = useState(false);
@@ -71,24 +72,34 @@ export function HeroSection() {
             </div>}
         </div>
         
-        <div className="inline-block group relative bg-gradient-to-b from-brand-primary/10 to-brand-light/50 
-                p-px rounded-2xl backdrop-blur-lg 
-                overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <LoginDrawer>
-            <Button variant="ghost" className="rounded-[1.15rem] px-4 py-4 md:px-8 md:py-6 text-base md:text-lg font-semibold backdrop-blur-md 
-                bg-white/95 hover:bg-white/100 dark:bg-black/95 dark:hover:bg-black/100 
-                text-brand-primary dark:text-white transition-all duration-300 
-                group-hover:-translate-y-0.5 border border-brand-primary/10 dark:border-white/10
-                hover:shadow-md dark:hover:shadow-neutral-800/50">
-              <span className="opacity-90 group-hover:opacity-100 transition-opacity">
-                Begin Experience
-              </span>
-              <span className="ml-2 md:ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
-                    transition-all duration-300">
-                →
-              </span>
-            </Button>
-          </LoginDrawer>
+        <div className="flex flex-col md:flex-row gap-5 justify-center items-center mb-8">
+          <div className="inline-block group relative bg-gradient-to-b from-brand-primary/10 to-brand-light/50 
+                  p-px rounded-2xl backdrop-blur-lg 
+                  overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <LoginDrawer product="framework">
+              <Button variant="ghost" className="rounded-[1.15rem] px-4 py-4 md:px-8 md:py-6 text-base md:text-lg font-semibold backdrop-blur-md 
+                  bg-white/95 hover:bg-white/100 dark:bg-black/95 dark:hover:bg-black/100 
+                  text-brand-primary dark:text-white transition-all duration-300 
+                  group-hover:-translate-y-0.5 border border-brand-primary/10 dark:border-white/10
+                  hover:shadow-md dark:hover:shadow-neutral-800/50">
+                <span className="opacity-90 group-hover:opacity-100 transition-opacity">
+                  Begin Experience
+                </span>
+                <span className="ml-2 md:ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
+                      transition-all duration-300">
+                  →
+                </span>
+              </Button>
+            </LoginDrawer>
+          </div>
+          
+          <Link to="/maiObserve" className="group flex items-center gap-2 text-brand-primary hover:text-brand-dark transition-colors">
+            <LineChart className="h-5 w-5" />
+            <span className="text-sm md:text-base font-medium group-hover:underline">
+              Check out mAI Observe - Track your AI performance
+            </span>
+            <span className="opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">→</span>
+          </Link>
         </div>
       </div>
     </BackgroundPaths>;

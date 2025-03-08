@@ -18,12 +18,24 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { User } from "@/types/api";
 
-export function LoginDrawer() {
+type LoginDrawerProps = {
+  children: React.ReactNode;
+  product?: "framework" | "observe";
+}
+
+export function LoginDrawer({ children, product = "framework" }: LoginDrawerProps) {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const productTitles = {
+    framework: "mAI AgenticFramework",
+    observe: "mAI Observe"
+  };
+
+  const productTitle = productTitles[product];
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -46,14 +58,12 @@ export function LoginDrawer() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button className="bg-brand-primary hover:bg-brand-dark text-white px-8 py-6 text-lg rounded-full shadow-lg transition-all">
-          Begin Experiencing
-        </Button>
+        {children}
       </DrawerTrigger>
       <DrawerContent className="bg-white">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle className="text-2xl text-brand-primary">Login to mAI AgenticFramework</DrawerTitle>
+            <DrawerTitle className="text-2xl text-brand-primary">Login to {productTitle}</DrawerTitle>
             <DrawerDescription>
               Please enter your credentials to access the platform.
             </DrawerDescription>
