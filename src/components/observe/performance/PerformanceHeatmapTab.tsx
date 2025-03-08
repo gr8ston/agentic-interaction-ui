@@ -20,7 +20,7 @@ import {
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
-import { extendedChartConfig, providerChartConfig } from "./chartConfig";
+import { chartConfig, extendedChartConfig, providerChartConfig } from "./chartConfig";
 import { 
   latencyByTimeData, 
   latencyByAppData,

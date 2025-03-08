@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -18,8 +17,7 @@ import {
   Pie,
   Cell,
   ComposedChart,
-  Scatter,
-  BoxPlot
+  Scatter
 } from "recharts";
 import { 
   ChartContainer, 
