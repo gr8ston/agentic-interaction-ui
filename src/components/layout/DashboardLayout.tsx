@@ -1,10 +1,10 @@
 
-import { useState } from "react";
-import { ToolsSidebar } from "@/components/sidebar/ToolsSidebar";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, HelpCircle, FileText, Code, FileMinus, Search, MapPin, Flag } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -13,22 +13,84 @@ interface DashboardLayoutProps {
 export function DashboardLayout({
   children
 }: DashboardLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
-  const {
-    logout,
-    user
-  } = useAuth();
+  const { logout, user } = useAuth();
   
-  // Auto-collapse sidebar on mobile
-  useState(() => {
+  useEffect(() => {
     if (isMobile) {
-      setSidebarCollapsed(true);
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
     }
-  });
+  }, [isMobile]);
 
-  return <div className="flex h-screen bg-gray-50">
-      <ToolsSidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+  const tools = [
+    {
+      label: "Documentation",
+      href: "#",
+      icon: <FileText className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "Code Samples",
+      href: "#",
+      icon: <Code className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "File Browser",
+      href: "#",
+      icon: <FileMinus className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "Search",
+      href: "#",
+      icon: <Search className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "Location",
+      href: "#",
+      icon: <MapPin className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "Reports",
+      href: "#",
+      icon: <Flag className="h-5 w-5 text-brand-primary" />
+    },
+    {
+      label: "Help",
+      href: "#",
+      icon: <HelpCircle className="h-5 w-5 text-brand-primary" />
+    }
+  ];
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+        <SidebarBody className="justify-between h-full">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex items-center justify-between py-2">
+              {sidebarOpen && <h2 className="font-semibold text-lg text-brand-primary">Tools</h2>}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="ml-auto"
+              >
+                <Menu size={18} />
+              </Button>
+            </div>
+            
+            <div className="mt-6 flex flex-col gap-2">
+              {tools.map((tool, index) => (
+                <SidebarLink 
+                  key={index} 
+                  link={tool}
+                />
+              ))}
+            </div>
+          </div>
+        </SidebarBody>
+      </Sidebar>
       
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
@@ -39,7 +101,7 @@ export function DashboardLayout({
                 variant="ghost" 
                 size="sm" 
                 className="md:hidden"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onClick={() => setSidebarOpen(!sidebarOpen)}
               >
                 <Menu size={18} />
               </Button>
@@ -66,5 +128,6 @@ export function DashboardLayout({
           {children}
         </main>
       </div>
-    </div>;
+    </div>
+  );
 }
