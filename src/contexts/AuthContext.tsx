@@ -53,6 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Login successful",
         description: `Welcome back, ${response.user.username}!`,
       });
+      return response; // Return the response so navigation can happen
     } catch (error) {
       toast({
         title: "Login failed",

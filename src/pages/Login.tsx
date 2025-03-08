@@ -15,13 +15,13 @@ export default function Login() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-brand-background">
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-brand-primary mb-2">MOURITech</h1>
+        <h1 className="text-4xl font-bold text-brand-primary mb-2">mAI AgenticFramework</h1>
         <p className="text-xl text-gray-600">Agentic Framework Demo</p>
       </div>
       <div className="w-full max-w-md">

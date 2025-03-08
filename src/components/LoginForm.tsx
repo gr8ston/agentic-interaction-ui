@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { User } from "@/types/api";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -30,6 +32,7 @@ type LoginFormValues = z.infer<typeof formSchema>;
 export function LoginForm() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,6 +50,7 @@ export function LoginForm() {
         password: values.password,
       };
       await login(credentials);
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
     } finally {
