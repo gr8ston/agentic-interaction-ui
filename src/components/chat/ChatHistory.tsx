@@ -40,7 +40,15 @@ export function ChatHistory({ messages, isTyping = false }: ChatHistoryProps) {
           {isTyping && (
             <ChatBubble variant="received">
               <ChatBubbleAvatar fallback="A" />
-              <ChatBubbleMessage isLoading />
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span className="font-medium">Assistant</span>
+                </div>
+                <ChatBubbleMessage
+                  isLoading
+                  className="bg-white border border-gray-200 shadow-sm text-gray-800"
+                />
+              </div>
             </ChatBubble>
           )}
           

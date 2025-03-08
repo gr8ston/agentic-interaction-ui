@@ -1,8 +1,6 @@
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { AIInputWithLoading } from "@/components/ui/ai-input-with-loading";
+import { useState } from "react";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -10,39 +8,15 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    
-    if (message.trim() && !disabled) {
-      onSendMessage(message);
-      setMessage("");
-    }
-  };
-
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      className="flex items-center space-x-2 p-4 border-t bg-white"
-    >
-      <Input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
+    <div className="border-t bg-white">
+      <AIInputWithLoading
+        onSubmit={onSendMessage}
         placeholder="Type your message..."
-        className="flex-1"
+        loadingDuration={2000}
         disabled={disabled}
-        autoFocus
+        className="py-2"
       />
-      <Button 
-        type="submit" 
-        size="icon" 
-        className="bg-brand-primary hover:bg-brand-dark"
-        disabled={!message.trim() || disabled}
-      >
-        <Send className="h-4 w-4" />
-        <span className="sr-only">Send message</span>
-      </Button>
-    </form>
+    </div>
   );
 }
