@@ -1,4 +1,3 @@
-
 "use client";
 
 import { CornerRightUp } from "lucide-react";
@@ -33,8 +32,8 @@ export function AIInputWithLoading({
   disabled = false
 }: AIInputWithLoadingProps) {
   const [inputValue, setInputValue] = useState("");
-  const [submitted, setSubmitted] = useState(autoAnimate);
-  const [isAnimating, setIsAnimating] = useState(autoAnimate);
+  const [submitted, setSubmitted] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight,
