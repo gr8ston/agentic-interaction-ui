@@ -7,11 +7,18 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
-  ResponsiveContainer,
+  Legend,
   Cell
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  ChartContainer, 
+  ChartTooltipContent, 
+  ChartTooltip, 
+  ChartLegendContent, 
+  ChartLegend,
+  type ChartConfig
+} from "@/components/ui/chart";
 
 // Data for each category
 const responseTimeData = [
@@ -35,62 +42,91 @@ const tokenUsageData = [
   { name: "LangGraph", value: 100, color: "#888888", best: false }
 ];
 
-// Custom tooltip formatter
-const CustomTooltip = ({ active, payload, label, category }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    
-    let valueDisplay = `${payload[0].value}`;
-    
-    // Format based on category
-    if (category === "responseTime") {
-      valueDisplay = data.value >= 1000 ? `${(data.value / 1000).toFixed(1)}s` : `${data.value}ms`;
-    } else if (category === "accuracy") {
-      valueDisplay = `${data.value}%`;
-    } else if (category === "tokenUsage") {
-      valueDisplay = data.name === "mAI" ? `${data.value}% fewer` : `${data.value}% (baseline)`;
-    }
+// Create chart configs
+const responseTimeConfig: ChartConfig = {
+  mAI: { label: "mAI", color: "#005B99" },
+  CrewAI: { label: "CrewAI", color: "#888888" },
+  Autogen: { label: "Autogen", color: "#888888" },
+  LangGraph: { label: "LangGraph", color: "#888888" },
+};
 
-    return (
-      <div className="bg-white p-2 border border-gray-200 rounded shadow-sm">
-        <p className="font-medium">{data.name}</p>
-        <p className="text-sm text-gray-700">{valueDisplay}</p>
-        {data.best && <p className="text-xs text-brand-primary mt-1 font-medium">Best Performance</p>}
-      </div>
-    );
+const accuracyConfig: ChartConfig = {
+  mAI: { label: "mAI", color: "#005B99" },
+  CrewAI: { label: "CrewAI", color: "#888888" },
+  Autogen: { label: "Autogen", color: "#888888" },
+  LangGraph: { label: "LangGraph", color: "#888888" },
+};
+
+const tokenUsageConfig: ChartConfig = {
+  mAI: { label: "mAI", color: "#005B99" },
+  CrewAI: { label: "CrewAI", color: "#888888" },
+  Autogen: { label: "Autogen", color: "#888888" },
+  LangGraph: { label: "LangGraph", color: "#888888" },
+};
+
+// Custom formatter based on metric type
+const formatValue = (value: number, category: string) => {
+  if (category === "responseTime") {
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${value}ms`;
+  } else if (category === "accuracy") {
+    return `${value}%`;
+  } else if (category === "tokenUsage") {
+    return value === 50 ? `${value}% fewer` : `${value}% (baseline)`;
   }
-
-  return null;
+  return value;
 };
 
 // Single metric chart component
-const MetricChart = ({ data, title, tooltip, category, isMobile }: { 
+const MetricChart = ({ 
+  data, 
+  title, 
+  tooltip, 
+  category, 
+  config 
+}: { 
   data: any[],
   title: string, 
   tooltip: string,
   category: string,
-  isMobile: boolean
+  config: ChartConfig
 }) => {
   return (
     <div className="mb-6">
       <h4 className="text-sm font-medium mb-1 text-gray-700">{title}</h4>
       <p className="text-xs text-gray-500 mb-3">{tooltip}</p>
       
-      <ResponsiveContainer width="100%" height={isMobile ? 200 : 250}>
+      <ChartContainer config={config} className="h-[250px] w-full">
         <BarChart
           data={data}
           layout="vertical"
           margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={!isMobile} />
+          <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={true} />
           <XAxis type="number" hide={category === "tokenUsage"} />
-          <YAxis type="category" dataKey="name" width={80} />
-          <Tooltip content={<CustomTooltip category={category} />} />
-          <Bar dataKey="value">
+          <YAxis 
+            type="category" 
+            dataKey="name" 
+            width={80} 
+            axisLine={false}
+            tickLine={false}
+          />
+          <ChartTooltip 
+            content={
+              <ChartTooltipContent 
+                formatter={(value, name) => {
+                  return [formatValue(value as number, category), name];
+                }}
+              />
+            } 
+          />
+          <Bar 
+            dataKey="value" 
+            radius={[0, 4, 4, 0]}
+          >
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`}
-                fill={entry.color}
+                fill={`var(--color-${entry.name})`}
                 opacity={entry.best ? 1 : 0.6}
                 strokeWidth={entry.best ? 2 : 0}
                 stroke={entry.best ? "#007ACC" : "none"}
@@ -98,7 +134,7 @@ const MetricChart = ({ data, title, tooltip, category, isMobile }: {
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartContainer>
 
       {category === "tokenUsage" && (
         <div className="flex justify-center mt-2">
@@ -124,7 +160,7 @@ export function ComparisonChart() {
         title="Response Time" 
         tooltip="Lower is better"
         category="responseTime"
-        isMobile={isMobile}
+        config={responseTimeConfig}
       />
       
       <MetricChart 
@@ -132,7 +168,7 @@ export function ComparisonChart() {
         title="Accuracy (%)" 
         tooltip="Higher is better"
         category="accuracy"
-        isMobile={isMobile}
+        config={accuracyConfig}
       />
       
       <MetricChart 
@@ -140,7 +176,7 @@ export function ComparisonChart() {
         title="Token Usage (% of baseline)" 
         tooltip="Lower is better"
         category="tokenUsage"
-        isMobile={isMobile}
+        config={tokenUsageConfig}
       />
     </div>
   );
