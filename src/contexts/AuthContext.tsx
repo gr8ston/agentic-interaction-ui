@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
-  const login = async (credentials: User) => {
+  const login = async (credentials: User): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await authService.login(credentials);
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Login successful",
         description: `Welcome back, ${response.user.username}!`,
       });
-      return response; // Return the response so navigation can happen
+      // We're not returning the response anymore, just allowing the Promise to resolve
     } catch (error) {
       toast({
         title: "Login failed",
