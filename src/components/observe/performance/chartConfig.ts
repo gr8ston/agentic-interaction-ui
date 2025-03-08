@@ -75,3 +75,48 @@ export const extendedChartConfig = {
     color: "#9CA3AF"
   }
 };
+
+// Provider-specific chart configuration
+export const providerChartConfig = {
+  ...chartConfig,
+  OpenAI: {
+    label: "OpenAI",
+    color: "#10a37f" // OpenAI green
+  },
+  Anthropic: {
+    label: "Anthropic",
+    color: "#b622ff" // Anthropic purple
+  },
+  Google: {
+    label: "Google",
+    color: "#4285F4" // Google blue
+  },
+  Mistral: {
+    label: "Mistral",
+    color: "#7c3aed" // Violet color for Mistral
+  },
+  Cohere: {
+    label: "Cohere",
+    color: "#ff5a5f" // Red-ish color for Cohere
+  },
+  median: {
+    label: "Median",
+    color: "#64748b"
+  },
+  q1: {
+    label: "Q1",
+    color: "#94a3b8"
+  },
+  q3: {
+    label: "Q3",
+    color: "#94a3b8"
+  },
+  min: {
+    label: "Min",
+    color: "#cbd5e1"
+  },
+  max: {
+    label: "Max",
+    color: "#cbd5e1"
+  }
+};

@@ -135,3 +135,80 @@ export const summaryMetricsData = [
   { name: "User Satisfaction", withSummary: 25, withoutSummary: 0 },
   { name: "Task Completion", withSummary: 18, withoutSummary: 0 },
 ];
+
+// New data for provider and model visualizations
+export const providerLatencyData = [
+  { provider: "OpenAI", model: "GPT-4", latency: 320 },
+  { provider: "OpenAI", model: "GPT-3.5", latency: 280 },
+  { provider: "Anthropic", model: "Claude 3 Opus", latency: 350 },
+  { provider: "Anthropic", model: "Claude 3 Sonnet", latency: 310 },
+  { provider: "Anthropic", model: "Claude 3 Haiku", latency: 270 },
+  { provider: "Google", model: "Gemini Pro", latency: 340 },
+  { provider: "Google", model: "Gemini Ultra", latency: 360 },
+  { provider: "Mistral", model: "Mistral Large", latency: 300 },
+  { provider: "Mistral", model: "Mistral Medium", latency: 270 },
+  { provider: "Cohere", model: "Command R+", latency: 330 },
+];
+
+// Box plot data for latency distribution
+export const latencyDistributionData = [
+  { provider: "OpenAI", model: "GPT-4", median: 320, q1: 290, q3: 350, min: 260, max: 420 },
+  { provider: "OpenAI", model: "GPT-3.5", median: 280, q1: 250, q3: 310, min: 220, max: 380 },
+  { provider: "Anthropic", model: "Claude 3 Opus", median: 350, q1: 320, q3: 380, min: 300, max: 450 },
+  { provider: "Anthropic", model: "Claude 3 Sonnet", median: 310, q1: 290, q3: 340, min: 270, max: 400 },
+  { provider: "Anthropic", model: "Claude 3 Haiku", median: 270, q1: 250, q3: 300, min: 230, max: 350 },
+  { provider: "Google", model: "Gemini Pro", median: 340, q1: 310, q3: 370, min: 280, max: 430 },
+  { provider: "Google", model: "Gemini Ultra", median: 360, q1: 330, q3: 390, min: 300, max: 450 },
+  { provider: "Mistral", model: "Mistral Large", median: 300, q1: 270, q3: 330, min: 240, max: 390 },
+  { provider: "Mistral", model: "Mistral Medium", median: 270, q1: 240, q3: 300, min: 210, max: 360 },
+  { provider: "Cohere", model: "Command R+", median: 330, q1: 300, q3: 360, min: 270, max: 420 },
+];
+
+// Latency over time data (by provider)
+export const latencyOverTimeData = [
+  { date: "Jan 1", OpenAI: 315, Anthropic: 345, Google: 355, Mistral: 285, Cohere: 325 },
+  { date: "Jan 2", OpenAI: 310, Anthropic: 340, Google: 350, Mistral: 280, Cohere: 330 },
+  { date: "Jan 3", OpenAI: 320, Anthropic: 330, Google: 345, Mistral: 290, Cohere: 335 },
+  { date: "Jan 4", OpenAI: 305, Anthropic: 335, Google: 340, Mistral: 275, Cohere: 320 },
+  { date: "Jan 5", OpenAI: 300, Anthropic: 330, Google: 335, Mistral: 270, Cohere: 315 },
+  { date: "Jan 6", OpenAI: 295, Anthropic: 325, Google: 330, Mistral: 265, Cohere: 310 },
+  { date: "Jan 7", OpenAI: 290, Anthropic: 320, Google: 325, Mistral: 260, Cohere: 305 },
+  { date: "Jan 8", OpenAI: 295, Anthropic: 330, Google: 340, Mistral: 265, Cohere: 315 },
+  { date: "Jan 9", OpenAI: 300, Anthropic: 335, Google: 345, Mistral: 270, Cohere: 320 },
+  { date: "Jan 10", OpenAI: 310, Anthropic: 340, Google: 350, Mistral: 280, Cohere: 330 },
+];
+
+// Scatter plot data for latency vs tokens consumed
+export const latencyVsTokensByModelData = [
+  // OpenAI
+  { id: "msg-001", provider: "OpenAI", model: "GPT-4", tokens: 850, latency: 330 },
+  { id: "msg-002", provider: "OpenAI", model: "GPT-4", tokens: 1200, latency: 350 },
+  { id: "msg-003", provider: "OpenAI", model: "GPT-4", tokens: 600, latency: 310 },
+  { id: "msg-004", provider: "OpenAI", model: "GPT-3.5", tokens: 900, latency: 290 },
+  { id: "msg-005", provider: "OpenAI", model: "GPT-3.5", tokens: 500, latency: 260 },
+  { id: "msg-006", provider: "OpenAI", model: "GPT-3.5", tokens: 700, latency: 275 },
+  
+  // Anthropic
+  { id: "msg-007", provider: "Anthropic", model: "Claude 3 Opus", tokens: 1100, latency: 360 },
+  { id: "msg-008", provider: "Anthropic", model: "Claude 3 Opus", tokens: 800, latency: 345 },
+  { id: "msg-009", provider: "Anthropic", model: "Claude 3 Sonnet", tokens: 950, latency: 320 },
+  { id: "msg-010", provider: "Anthropic", model: "Claude 3 Sonnet", tokens: 650, latency: 305 },
+  { id: "msg-011", provider: "Anthropic", model: "Claude 3 Haiku", tokens: 550, latency: 275 },
+  { id: "msg-012", provider: "Anthropic", model: "Claude 3 Haiku", tokens: 400, latency: 260 },
+  
+  // Google
+  { id: "msg-013", provider: "Google", model: "Gemini Pro", tokens: 950, latency: 345 },
+  { id: "msg-014", provider: "Google", model: "Gemini Pro", tokens: 750, latency: 330 },
+  { id: "msg-015", provider: "Google", model: "Gemini Ultra", tokens: 1050, latency: 370 },
+  { id: "msg-016", provider: "Google", model: "Gemini Ultra", tokens: 1300, latency: 390 },
+  
+  // Mistral
+  { id: "msg-017", provider: "Mistral", model: "Mistral Large", tokens: 700, latency: 310 },
+  { id: "msg-018", provider: "Mistral", model: "Mistral Large", tokens: 450, latency: 285 },
+  { id: "msg-019", provider: "Mistral", model: "Mistral Medium", tokens: 550, latency: 275 },
+  { id: "msg-020", provider: "Mistral", model: "Mistral Medium", tokens: 350, latency: 255 },
+  
+  // Cohere
+  { id: "msg-021", provider: "Cohere", model: "Command R+", tokens: 800, latency: 335 },
+  { id: "msg-022", provider: "Cohere", model: "Command R+", tokens: 650, latency: 320 },
+];

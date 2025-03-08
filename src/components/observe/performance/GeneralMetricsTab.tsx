@@ -1,39 +1,51 @@
 
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, AreaChart, BarChart, ScatterChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Scatter, ZAxis } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-
-// Import data and utilities
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  ComposedChart,
+  Scatter,
+  BoxPlot
+} from "recharts";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
+import { chartConfig, providerChartConfig } from "./chartConfig";
 import { 
   latencyData, 
   tokenUsageData, 
   tokenUsagePerAppData, 
-  tokenUsageMonthlyData,
+  tokenUsageMonthlyData, 
   latencyVsTokensData,
-  outlierData 
-} from "../performance/performanceData";
-import { chartConfig } from "../performance/chartConfig";
+  outlierData,
+  providerLatencyData,
+  latencyDistributionData
+} from "./performanceData";
+import { renderProviderBar } from "./chartRenderers";
 
 interface GeneralMetricsTabProps {
-  onConversationSelect: (conversationId: string) => void;
+  onConversationSelect?: (conversationId: string) => void;
 }
 
 export function GeneralMetricsTab({ onConversationSelect }: GeneralMetricsTabProps) {
-  const handleRowClick = (id: string) => {
-    onConversationSelect(id);
-  };
-
-  const handleScatterClick = (data: any) => {
-    if (data && data.id) {
+  const handleOutlierClick = (data: any) => {
+    if (onConversationSelect && data && data.id) {
       onConversationSelect(data.id);
     }
   };
@@ -42,16 +54,16 @@ export function GeneralMetricsTab({ onConversationSelect }: GeneralMetricsTabPro
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Latency Trends</CardTitle>
-            <CardDescription>Response time in milliseconds</CardDescription>
+          <CardHeader>
+            <CardTitle>Latency Trends</CardTitle>
+            <CardDescription>Average response time (last 12 days)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
+            <div className="h-80">
               <ChartContainer config={chartConfig} className="h-full w-full">
                 <LineChart
                   data={latencyData}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="date" />
@@ -61,27 +73,25 @@ export function GeneralMetricsTab({ onConversationSelect }: GeneralMetricsTabPro
                     type="monotone" 
                     dataKey="value" 
                     stroke="var(--color-value)" 
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
+                    activeDot={{ r: 8 }} 
                   />
                 </LineChart>
               </ChartContainer>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Token Usage</CardTitle>
-            <CardDescription>Daily token consumption</CardDescription>
+          <CardHeader>
+            <CardTitle>Token Usage</CardTitle>
+            <CardDescription>Daily token consumption (last 12 days)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
+            <div className="h-80">
               <ChartContainer config={chartConfig} className="h-full w-full">
                 <AreaChart
                   data={tokenUsageData}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="date" />
@@ -92,7 +102,7 @@ export function GeneralMetricsTab({ onConversationSelect }: GeneralMetricsTabPro
                     dataKey="tokens" 
                     stroke="var(--color-tokens)" 
                     fill="var(--color-tokens)" 
-                    fillOpacity={0.3}
+                    fillOpacity={0.3} 
                   />
                 </AreaChart>
               </ChartContainer>
@@ -100,163 +110,205 @@ export function GeneralMetricsTab({ onConversationSelect }: GeneralMetricsTabPro
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Token Usage Per App</CardTitle>
-            <CardDescription>Distribution across applications</CardDescription>
+          <CardHeader>
+            <CardTitle>Average Latency by Provider/Model</CardTitle>
+            <CardDescription>Comparison of response times across providers and models</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
-              <ChartContainer config={chartConfig} className="h-full w-full">
+            <div className="h-80">
+              <ChartContainer config={providerChartConfig} className="h-full w-full">
                 <BarChart
-                  data={tokenUsagePerAppData}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                  layout="vertical"
+                  data={providerLatencyData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={true} vertical={false} />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="name" width={120} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="model" />
+                  <YAxis label={{ value: 'Latency (ms)', angle: -90, position: 'insideLeft' }} />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        labelFormatter={(value) => `Model: ${value}`}
+                        formatter={(value, name, props) => {
+                          return [`${value} ms`, `Provider: ${props.payload.provider}`];
+                        }}
+                      />
+                    } 
+                  />
                   <Bar 
-                    dataKey="tokens" 
-                    fill="var(--color-tokens)" 
-                    radius={[0, 4, 4, 0]}
+                    dataKey="latency" 
+                    name="Latency" 
+                    fill="var(--color-latency)" 
+                    shape={renderProviderBar}
                   />
                 </BarChart>
               </ChartContainer>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Monthly Token Usage</CardTitle>
-            <CardDescription>Trends over the past 6 months</CardDescription>
+          <CardHeader>
+            <CardTitle>Latency Distribution by Provider/Model</CardTitle>
+            <CardDescription>Box plot showing min, max, median, and quartiles</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
-              <ChartContainer config={chartConfig} className="h-full w-full">
-                <LineChart
-                  data={tokenUsageMonthlyData}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            <div className="h-80">
+              <ChartContainer config={providerChartConfig} className="h-full w-full">
+                <ComposedChart
+                  data={latencyDistributionData}
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                  layout="vertical"
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="tokens" 
-                    stroke="var(--color-tokens)" 
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
+                  <XAxis type="number" domain={['dataMin - 20', 'dataMax + 20']} />
+                  <YAxis dataKey="model" type="category" scale="band" />
+                  <ChartTooltip 
+                    content={
+                      <ChartTooltipContent 
+                        labelFormatter={(value) => `Model: ${value}`}
+                        formatter={(value, name, props) => {
+                          if (name === "median") return [`Median: ${value} ms`, `Provider: ${props.payload.provider}`];
+                          if (name === "q1") return [`Q1: ${value} ms`, ""];
+                          if (name === "q3") return [`Q3: ${value} ms`, ""];
+                          if (name === "min") return [`Min: ${value} ms`, ""];
+                          if (name === "max") return [`Max: ${value} ms`, ""];
+                          return [value, name];
+                        }}
+                      />
+                    } 
                   />
-                </LineChart>
+                  {/* Min-Max line */}
+                  <Line 
+                    dataKey="min" 
+                    stroke="#94a3b8" 
+                    strokeWidth={1} 
+                    dot={false}
+                    activeDot={false}
+                  />
+                  <Line 
+                    dataKey="max" 
+                    stroke="#94a3b8" 
+                    strokeWidth={1} 
+                    dot={false}
+                    activeDot={false}
+                  />
+                  
+                  {/* Box for Q1-Q3 */}
+                  <Bar
+                    dataKey="q3"
+                    fill="rgba(148, 163, 184, 0.2)"
+                    stroke="#94a3b8"
+                    radius={0}
+                    barSize={20}
+                  />
+                  
+                  {/* Median line */}
+                  <Line 
+                    dataKey="median" 
+                    stroke="#64748b" 
+                    strokeWidth={2} 
+                    dot={{ fill: "#64748b", r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </ComposedChart>
               </ChartContainer>
             </div>
           </CardContent>
         </Card>
       </div>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Latency vs Token Usage</CardTitle>
-          <CardDescription>Correlation between tokens and response time</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 w-full">
-            <ChartContainer config={chartConfig} className="h-full w-full">
-              <ScatterChart
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-              >
-                <CartesianGrid opacity={0.3} />
-                <XAxis 
-                  type="number" 
-                  dataKey="tokens" 
-                  name="Tokens" 
-                  label={{ value: 'Tokens Used', position: 'bottom', offset: 0 }}
-                />
-                <YAxis 
-                  type="number" 
-                  dataKey="latency" 
-                  name="Latency" 
-                  label={{ value: 'Latency (ms)', angle: -90, position: 'left' }}
-                />
-                <ZAxis range={[60, 60]} />
-                <ChartTooltip 
-                  cursor={{ strokeDasharray: '3 3' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-white p-4 border border-gray-200 rounded shadow-md">
-                          <p className="font-semibold text-sm">ID: {payload[0].payload.id}</p>
-                          <p className="text-sm text-gray-700">App: {payload[0].payload.app}</p>
-                          <p className="text-sm text-gray-700">Tokens: {payload[0].payload.tokens}</p>
-                          <p className="text-sm text-gray-700">Latency: {payload[0].payload.latency}ms</p>
-                          <p className="text-xs text-blue-600 mt-1">Click to view details</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter 
-                  name="Conversations" 
-                  data={latencyVsTokensData} 
-                  fill="#8884d8"
-                  onClick={handleScatterClick}
-                  cursor="pointer"
-                />
-              </ScatterChart>
-            </ChartContainer>
-          </div>
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Each point represents a conversation. Click on any point to view detailed conversation data.</p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Performance Outliers</CardTitle>
-          <CardDescription>Conversations with higher than normal resource usage</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Conversation ID</TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Latency (ms)</TableHead>
-                <TableHead>Resource Issue</TableHead>
-                <TableHead>Application</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {outlierData.map((item) => (
-                <TableRow 
-                  key={item.id}
-                  onClick={() => handleRowClick(item.id)}
-                  className="cursor-pointer hover:bg-gray-50"
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Token Usage by Application</CardTitle>
+            <CardDescription>Distribution of token consumption</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <BarChart
+                  data={tokenUsagePerAppData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  <TableCell className="font-medium text-blue-600">{item.id}</TableCell>
-                  <TableCell>{item.timestamp}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                      {item.latency}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{item.resource}</TableCell>
-                  <TableCell>{item.app}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Click on any conversation ID to view the detailed conversation history.</p>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar 
+                    dataKey="tokens" 
+                    fill="var(--color-tokens)" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Token Usage</CardTitle>
+            <CardDescription>Historical token consumption</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <BarChart
+                  data={tokenUsageMonthlyData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar 
+                    dataKey="tokens" 
+                    fill="var(--color-tokens)" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance Outliers</CardTitle>
+          <CardDescription>Conversations with unusual latency (click to view details)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left font-medium p-2">ID</th>
+                  <th className="text-left font-medium p-2">Timestamp</th>
+                  <th className="text-left font-medium p-2">Latency (ms)</th>
+                  <th className="text-left font-medium p-2">Resource</th>
+                  <th className="text-left font-medium p-2">Application</th>
+                </tr>
+              </thead>
+              <tbody>
+                {outlierData.map((item) => (
+                  <tr 
+                    key={item.id} 
+                    className="border-b hover:bg-gray-50 cursor-pointer" 
+                    onClick={() => handleOutlierClick(item)}
+                  >
+                    <td className="p-2 text-blue-600">{item.id}</td>
+                    <td className="p-2">{item.timestamp}</td>
+                    <td className="p-2">{item.latency}</td>
+                    <td className="p-2">{item.resource}</td>
+                    <td className="p-2">{item.app}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
