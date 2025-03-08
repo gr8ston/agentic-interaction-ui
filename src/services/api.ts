@@ -154,19 +154,35 @@ export const conversationService = {
       // Generate mock response
       return new Promise((resolve) => {
         setTimeout(() => {
+          // Process the question to make matching more reliable
+          const processedQuestion = request.question.toLowerCase().trim();
+          
+          // Check if the question contains specific keywords for predefined responses
+          let responseKey = '';
+          
+          if (processedQuestion.includes('france') && (processedQuestion.includes('capital') || processedQuestion.includes('paris'))) {
+            responseKey = 'france_capital';
+          } else if (processedQuestion === 'hi' || processedQuestion === 'hello') {
+            responseKey = 'greeting';
+          } else if (processedQuestion.includes('who are you')) {
+            responseKey = 'identity';
+          } else if (processedQuestion.includes('agentic framework')) {
+            responseKey = 'framework';
+          }
+          
           const mockResponse: ConversationResponse = {
             conversation_id: request.conversation_id || `c${Math.floor(Math.random() * 10000)}`,
             message_id: `m${Math.floor(Math.random() * 10000)}`,
-            answer: mockResponses[request.question.toLowerCase()] || "I don't have a specific answer for that question. Could you please provide more details or ask something else?",
+            answer: mockResponses[responseKey] || "I don't have a specific answer for that question. Could you please provide more details or ask something else?",
             tokens_consumed: {
               input: Math.floor(Math.random() * 20) + 5,
               output: Math.floor(Math.random() * 30) + 10,
             },
             latency_taken: parseFloat((Math.random() * 1.5 + 0.5).toFixed(2)),
             prompt_for_composition: request.question,
-            composition: requestCompositions[request.question.toLowerCase()] || "Let me think about how to respond to this question... I'll need to consider the context and provide a helpful, accurate answer based on the information I have. I should break down my reasoning step by step to ensure my response is well-structured and logical.",
+            composition: requestCompositions[responseKey] || "Let me think about how to respond to this question... I'll need to consider the context and provide a helpful, accurate answer based on the information I have. I should break down my reasoning step by step to ensure my response is well-structured and logical.",
             prompt_for_enhanced_response: `Question: ${request.question}\n\nPlease reason step by step and then provide the final answer.`,
-            raw_results: rawResults[request.question.toLowerCase()] || null
+            raw_results: rawResults[responseKey] || null
           };
           
           resolve(mockResponse);
@@ -183,27 +199,22 @@ export const conversationService = {
 
 // Mock responses for common questions
 const mockResponses: Record<string, string> = {
-  'what is the capital of france?': 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
-  'what is the capital of france and its attractions?': 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
-  'who are you?': 'I am an AI assistant created by MOURITech using the Agentic Framework. I can help answer questions, analyze information, and assist with various tasks through conversation.',
-  'hello': 'Hello! How can I assist you today?',
-  'hi': 'Hi there! How can I help you?',
-  'how does the agentic framework work?': 'The Agentic Framework works by breaking down complex tasks into steps handled by specialized tools and agents. When you ask a question, the framework determines which tools to use, creates a composition of reasoning steps, enhances the response with additional context if needed, and then delivers a comprehensive answer. Behind the scenes, it manages conversation context, metrics tracking, and efficient token usage.',
+  'france_capital': 'Paris is the capital of France. Its attractions include the iconic Eiffel Tower, the world-famous Louvre Museum housing the Mona Lisa, the historic Notre-Dame Cathedral, and the picturesque Champs-Élysées avenue.',
+  'greeting': 'Hello! How can I assist you today?',
+  'identity': 'I am an AI assistant created by MOURITech using the Agentic Framework. I can help answer questions, analyze information, and assist with various tasks through conversation.',
+  'framework': 'The Agentic Framework works by breaking down complex tasks into steps handled by specialized tools and agents. When you ask a question, the framework determines which tools to use, creates a composition of reasoning steps, enhances the response with additional context if needed, and then delivers a comprehensive answer. Behind the scenes, it manages conversation context, metrics tracking, and efficient token usage.',
 };
 
 // Mock compositions for common questions
 const requestCompositions: Record<string, string> = {
-  'what is the capital of france?': 'Find_Attractions(Find_Capital("France"))',
-  'what is the capital of france and its attractions?': 'Find_Attractions(Find_Capital("France"))',
-  'who are you?': 'Identify_Self() -> Describe_Capabilities() -> Format_Response()',
-  'hello': 'Greeting_Response(context=None)',
-  'hi': 'Greeting_Response(context=None)',
-  'how does the agentic framework work?': 'Define_Agentic_Framework() -> Explain_Components() -> Describe_Process_Flow() -> Summarize()',
+  'france_capital': 'Find_Attractions(Find_Capital("France"))',
+  'greeting': 'Greeting_Response(context=None)',
+  'identity': 'Identify_Self() -> Describe_Capabilities() -> Format_Response()',
+  'framework': 'Define_Agentic_Framework() -> Explain_Components() -> Describe_Process_Flow() -> Summarize()',
 };
 
 // Mock raw results for common questions
 const rawResults: Record<string, string> = {
-  'what is the capital of france?': 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
-  'what is the capital of france and its attractions?': 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
-  'how does the agentic framework work?': 'Components: [Task Decomposition, Tool Selection, Reasoning Engine, Response Enhancement] | Process: Sequential with feedback loops | Metrics: Latency=0.8s, Tokens=[input:15, output:42]',
+  'france_capital': 'Paris | Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, Champs-Élysées',
+  'framework': 'Components: [Task Decomposition, Tool Selection, Reasoning Engine, Response Enhancement] | Process: Sequential with feedback loops | Metrics: Latency=0.8s, Tokens=[input:15, output:42]',
 };
