@@ -14,7 +14,9 @@ import {
   Search,
   LucideIcon,
   Menu,
-  X
+  X,
+  MapPin,
+  Flag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +37,10 @@ const getIconByName = (iconName: string): LucideIcon => {
       return FileMinus;
     case 'search':
       return Search;
+    case 'map-pin':
+      return MapPin;
+    case 'flag':
+      return Flag;
     default:
       return HelpCircle;
   }

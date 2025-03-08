@@ -1,4 +1,3 @@
-
 import { AuthResponse, ConversationRequest, ConversationResponse, Tool, User } from '@/types/api';
 
 // Base URL for API calls - replace with actual API endpoint
@@ -35,6 +34,18 @@ const MOCK_TOOLS: Tool[] = [
     name: 'Research Information',
     description: 'Research information on specific topics',
     icon: 'search'
+  },
+  {
+    id: '6',
+    name: 'Find Attractions',
+    description: 'Discover attractions in various locations',
+    icon: 'map-pin'
+  },
+  {
+    id: '7',
+    name: 'Find Capital',
+    description: 'Learn about capitals of countries worldwide',
+    icon: 'flag'
   }
 ];
 

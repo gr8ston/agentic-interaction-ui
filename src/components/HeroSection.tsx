@@ -3,6 +3,7 @@ import { LoginDrawer } from "@/components/LoginDrawer";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Button } from "@/components/ui/button";
 import { Rocket, Zap, Brain } from "lucide-react";
+import React from "react";
 
 export function HeroSection() {
   return (
@@ -47,7 +48,7 @@ export function HeroSection() {
         <div className="inline-block group relative bg-gradient-to-b from-brand-primary/10 to-brand-light/50 
                 p-px rounded-2xl backdrop-blur-lg 
                 overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <LoginDrawer trigger={
+          <LoginDrawer>
             <Button
               variant="ghost"
               className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
@@ -66,7 +67,7 @@ export function HeroSection() {
                 →
               </span>
             </Button>
-          } />
+          </LoginDrawer>
         </div>
       </div>
     </BackgroundPaths>
