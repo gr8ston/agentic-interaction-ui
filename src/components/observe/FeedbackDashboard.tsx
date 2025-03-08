@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   PieChart, 
@@ -23,13 +22,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Clock, User, MessageSquare, Activity } from "lucide-react";
 
-// Mock data for feedback distribution
 const feedbackDistributionData = [
   { name: "Positive", value: 65, color: "#4CAF50" },
   { name: "Negative", value: 35, color: "#F44336" },
 ];
 
-// Mock data for feedback over time
 const feedbackOverTimeData = [
   { date: "Jan 1", positive: 45, negative: 10 },
   { date: "Jan 2", positive: 50, negative: 15 },
@@ -43,7 +40,6 @@ const feedbackOverTimeData = [
   { date: "Jan 10", positive: 70, negative: 5 },
 ];
 
-// Mock data for feedback by user
 const feedbackByUserData = [
   { id: "user-1", name: "John D.", positive: 18, negative: 2 },
   { id: "user-2", name: "Sarah M.", positive: 15, negative: 3 },
@@ -52,7 +48,6 @@ const feedbackByUserData = [
   { id: "user-5", name: "Mike T.", positive: 8, negative: 10 },
 ];
 
-// Mock data for feedback by conversation
 const feedbackByConversationData = [
   { id: "conv-1234", time: "Today, 10:23", positive: 3, negative: 0 },
   { id: "conv-2345", time: "Today, 09:15", positive: 2, negative: 1 },
@@ -61,7 +56,6 @@ const feedbackByConversationData = [
   { id: "conv-5678", time: "2 days ago", positive: 1, negative: 2 },
 ];
 
-// Mock data for feedback vs latency
 const feedbackVsLatencyData = [
   { id: "msg-1001", latency: 350, isPositive: true, app: "Customer Support" },
   { id: "msg-1002", latency: 420, isPositive: true, app: "Customer Support" },
@@ -75,7 +69,6 @@ const feedbackVsLatencyData = [
   { id: "msg-1010", latency: 690, isPositive: false, app: "Sales Assistant" },
 ];
 
-// Mock data for feedback vs token consumption
 const feedbackVsTokensData = [
   { id: "msg-2001", tokens: 120, isPositive: true, app: "Customer Support" },
   { id: "msg-2002", tokens: 350, isPositive: true, app: "Customer Support" },
@@ -89,7 +82,6 @@ const feedbackVsTokensData = [
   { id: "msg-2010", tokens: 550, isPositive: false, app: "Sales Assistant" },
 ];
 
-// Mock data for app-based feedback
 const appFeedbackData = [
   { name: "Customer Support", positive: 75, negative: 25 },
   { name: "Product Assistant", positive: 60, negative: 40 },
@@ -98,7 +90,6 @@ const appFeedbackData = [
   { name: "Sales Assistant", positive: 65, negative: 35 },
 ];
 
-// Common words for positive feedback (mock data)
 const positiveWords = [
   { text: "helpful", value: 64 },
   { text: "fast", value: 42 },
@@ -112,7 +103,6 @@ const positiveWords = [
   { text: "excellent", value: 12 },
 ];
 
-// Common words for negative feedback (mock data)
 const negativeWords = [
   { text: "slow", value: 38 },
   { text: "confusing", value: 30 },
@@ -148,6 +138,21 @@ const chartConfig = {
 interface FeedbackDashboardProps {
   onConversationSelect?: (conversationId: string) => void;
 }
+
+const renderScatterShape = (props: any) => {
+  const { cx, cy, fill } = props;
+  const isPositive = props.payload.isPositive;
+  
+  return (
+    <circle 
+      cx={cx} 
+      cy={cy} 
+      r={8} 
+      fill={isPositive ? "#4CAF50" : "#F44336"} 
+      stroke="none" 
+    />
+  );
+};
 
 export function FeedbackDashboard({ onConversationSelect }: FeedbackDashboardProps) {
   const handleConversationClick = (id: string) => {
@@ -446,7 +451,8 @@ export function FeedbackDashboard({ onConversationSelect }: FeedbackDashboardPro
                   <Scatter 
                     name="Feedback" 
                     data={feedbackVsLatencyData} 
-                    fill={(entry) => entry.isPositive ? "#4CAF50" : "#F44336"}
+                    fill="#4CAF50"
+                    shape={renderScatterShape}
                     onClick={handleMessageClick}
                     cursor="pointer"
                   />
@@ -503,7 +509,8 @@ export function FeedbackDashboard({ onConversationSelect }: FeedbackDashboardPro
                   <Scatter 
                     name="Feedback" 
                     data={feedbackVsTokensData} 
-                    fill={(entry) => entry.isPositive ? "#4CAF50" : "#F44336"}
+                    fill="#4CAF50"
+                    shape={renderScatterShape}
                     onClick={handleMessageClick}
                     cursor="pointer"
                   />
