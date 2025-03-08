@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, AreaChart, BarChart, ScatterChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Scatter, ZAxis, Legend, ErrorBar } from "recharts";
 import { ChartContainer, ChartTooltipContent, ChartTooltip, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -225,6 +226,44 @@ const renderScatterShape = (props: any) => {
       r={8} 
       fill="#8B5CF6" 
       stroke="none" 
+    />
+  );
+};
+
+// Create a custom shape renderer for the feedback bar
+const renderPositiveNegativeFeedbackBar = (props: any) => {
+  const { x, y, width, height, value, name } = props;
+  
+  const fill = name === "Positive" ? "#10B981" : 
+              name === "Neutral" ? "#F59E0B" : 
+              "#EF4444";
+  
+  return (
+    <rect 
+      x={x} 
+      y={y} 
+      width={width} 
+      height={height} 
+      fill={fill} 
+      radius={[4, 4, 0, 0]}
+    />
+  );
+};
+
+// Create a custom shape renderer for the summary metrics bar
+const renderSummaryMetricsBar = (props: any) => {
+  const { x, y, width, height, value } = props;
+  
+  const fill = value > 0 ? "#10B981" : "#EF4444";
+  
+  return (
+    <rect 
+      x={x} 
+      y={y} 
+      width={width} 
+      height={height} 
+      fill={fill} 
+      radius={4}
     />
   );
 };
@@ -610,11 +649,7 @@ export function PerformanceDashboard({ onConversationSelect }: PerformanceDashbo
                       <Bar 
                         dataKey="value" 
                         radius={[4, 4, 0, 0]}
-                        fill={(entry) => {
-                          if (entry.name === "Positive") return "#10B981";
-                          if (entry.name === "Neutral") return "#F59E0B";
-                          return "#EF4444";
-                        }}
+                        shape={renderPositiveNegativeFeedbackBar}
                       />
                     </BarChart>
                   </ChartContainer>
@@ -648,7 +683,7 @@ export function PerformanceDashboard({ onConversationSelect }: PerformanceDashbo
                     />
                     <Bar 
                       dataKey="withSummary" 
-                      fill={(entry) => entry.withSummary > 0 ? "#10B981" : "#EF4444"}
+                      shape={renderSummaryMetricsBar}
                       radius={4}
                     />
                     <Legend />
