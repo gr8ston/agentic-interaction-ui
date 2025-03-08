@@ -2,10 +2,13 @@
 import { LoginDrawer } from "@/components/LoginDrawer";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Button } from "@/components/ui/button";
-import { Rocket, Zap, Brain } from "lucide-react";
-import React from "react";
+import { Rocket, Zap, Brain, BarChart } from "lucide-react";
+import React, { useState } from "react";
+import { ComparisonChart } from "@/components/ComparisonChart";
 
 export function HeroSection() {
+  const [showComparison, setShowComparison] = useState(false);
+
   return (
     <BackgroundPaths title="mAI AgenticFramework">
       <div className="w-full max-w-5xl mx-auto text-center px-4 md:px-6">
@@ -21,7 +24,10 @@ export function HeroSection() {
               </div>
             </div>
             <h3 className="text-lg md:text-xl font-semibold mb-2 text-brand-primary">Lightning Fast</h3>
-            <p className="text-sm md:text-base text-gray-600">Delivers responses in milliseconds with unmatched processing speed.</p>
+            <p className="text-sm md:text-base text-gray-600 mb-3">Delivers responses in milliseconds with unmatched processing speed.</p>
+            <div className="bg-brand-light/50 py-2 px-3 rounded-lg">
+              <p className="text-xs md:text-sm font-medium text-brand-primary">Average Response Time: 400ms</p>
+            </div>
           </div>
           
           <div className="bg-white/90 p-4 md:p-6 rounded-xl shadow-md border border-gray-100 backdrop-blur-sm">
@@ -31,7 +37,10 @@ export function HeroSection() {
               </div>
             </div>
             <h3 className="text-lg md:text-xl font-semibold mb-2 text-brand-primary">Highly Accurate</h3>
-            <p className="text-sm md:text-base text-gray-600">Precision-engineered responses with advanced reasoning capabilities.</p>
+            <p className="text-sm md:text-base text-gray-600 mb-3">Precision-engineered responses with advanced reasoning capabilities.</p>
+            <div className="bg-brand-light/50 py-2 px-3 rounded-lg">
+              <p className="text-xs md:text-sm font-medium text-brand-primary">Accuracy Rate: 92%</p>
+            </div>
           </div>
           
           <div className="bg-white/90 p-4 md:p-6 rounded-xl shadow-md border border-gray-100 backdrop-blur-sm">
@@ -41,8 +50,33 @@ export function HeroSection() {
               </div>
             </div>
             <h3 className="text-lg md:text-xl font-semibold mb-2 text-brand-primary">Ultra Efficient</h3>
-            <p className="text-sm md:text-base text-gray-600">Optimized resource utilization for maximum performance with minimal consumption.</p>
+            <p className="text-sm md:text-base text-gray-600 mb-3">Optimized resource utilization for maximum performance with minimal consumption.</p>
+            <div className="bg-brand-light/50 py-2 px-3 rounded-lg">
+              <p className="text-xs md:text-sm font-medium text-brand-primary">Token Efficiency: 50% fewer tokens</p>
+            </div>
           </div>
+        </div>
+        
+        <div className="mb-8">
+          <Button 
+            variant="outline" 
+            className="border-brand-primary/30 hover:bg-brand-light/50 text-brand-primary"
+            onClick={() => setShowComparison(!showComparison)}
+          >
+            <BarChart className="h-4 w-4 mr-2" />
+            {showComparison ? "Hide Comparison" : "See How We Compare"}
+          </Button>
+          
+          {showComparison && (
+            <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <ComparisonChart />
+              <p className="text-xs text-gray-500 mt-3 max-w-3xl mx-auto">
+                Metrics are based on tests conducted on the same use case implemented across different frameworks, 
+                with averages taken to derive the results. Due to the non-deterministic nature of AI, 
+                metrics may vary slightly with each test, but overall trends consistently show mAI as the leader in each category.
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="inline-block group relative bg-gradient-to-b from-brand-primary/10 to-brand-light/50 
