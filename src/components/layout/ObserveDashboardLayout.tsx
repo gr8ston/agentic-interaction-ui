@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, BarChart3, Activity, MessageSquare, Bell, ThumbsUp, Users } from "lucide-react";
+import { LogOut, BarChart3, Activity, MessageSquare, Bell, ThumbsUp, Users, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,7 @@ export function ObserveDashboardLayout({
                     icon: item.icon
                   }}
                   active={activeTab === item.id}
-                  onClick={() => onTabChange(item.id as DashboardTab)}
+                  onTabClick={() => onTabChange(item.id as DashboardTab)}
                 />
               ))}
             </div>

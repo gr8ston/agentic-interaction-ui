@@ -76,7 +76,7 @@ export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
   return (
     <>
       <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <MobileSidebar {...(props as any)} />
     </>
   );
 };
@@ -159,14 +159,24 @@ export const SidebarLink = ({
   link,
   className,
   active = false,
+  onTabClick,
   ...props
 }: {
   link: Links;
   className?: string;
   active?: boolean;
+  onTabClick?: () => void;
   props?: any;
 }) => {
   const { open, animate } = useSidebar();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (onTabClick) {
+      e.preventDefault();
+      onTabClick();
+    }
+  };
+  
   return (
     <Link
       to={link.href}
@@ -175,6 +185,7 @@ export const SidebarLink = ({
         active ? "text-brand-primary" : "text-gray-700",
         className
       )}
+      onClick={handleClick}
       {...props}
     >
       {link.icon}
