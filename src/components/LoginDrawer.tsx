@@ -36,6 +36,9 @@ export function LoginDrawer({ children, product = "framework" }: LoginDrawerProp
   };
 
   const productTitle = productTitles[product];
+  
+  // Determine which dashboard to navigate to based on the product
+  const dashboardRoute = product === "observe" ? "/observe-dashboard" : "/dashboard";
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +50,7 @@ export function LoginDrawer({ children, product = "framework" }: LoginDrawerProp
         password,
       };
       await login(credentials);
-      navigate("/dashboard");
+      navigate(dashboardRoute);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
