@@ -6,9 +6,10 @@ import { PerformanceDashboard } from "@/components/observe/PerformanceDashboard"
 import { ConversationDashboard } from "@/components/observe/ConversationDashboard";
 import { AlertsDashboard } from "@/components/observe/AlertsDashboard";
 import { FeedbackDashboard } from "@/components/observe/FeedbackDashboard";
+import { UserEngagementDashboard } from "@/components/observe/UserEngagementDashboard";
 import { ConversationDetailsModal } from "@/components/observe/ConversationDetailsModal";
 
-type DashboardTab = "overview" | "performance" | "conversations" | "alerts" | "feedback";
+type DashboardTab = "overview" | "performance" | "conversations" | "alerts" | "feedback" | "engagement";
 
 export default function ObserveDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
@@ -30,6 +31,7 @@ export default function ObserveDashboard() {
         {activeTab === "overview" && <ObserveOverviewDashboard onConversationSelect={handleConversationSelect} />}
         {activeTab === "performance" && <PerformanceDashboard onConversationSelect={handleConversationSelect} />}
         {activeTab === "conversations" && <ConversationDashboard onConversationSelect={handleConversationSelect} />}
+        {activeTab === "engagement" && <UserEngagementDashboard onConversationSelect={handleConversationSelect} />}
         {activeTab === "alerts" && <AlertsDashboard onConversationSelect={handleConversationSelect} />}
         {activeTab === "feedback" && <FeedbackDashboard onConversationSelect={handleConversationSelect} />}
       </ObserveDashboardLayout>

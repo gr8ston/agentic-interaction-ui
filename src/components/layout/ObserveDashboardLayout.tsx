@@ -1,13 +1,13 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Menu, BarChart3, Activity, MessageSquare, Bell, ThumbsUp } from "lucide-react";
+import { LogOut, Menu, BarChart3, Activity, MessageSquare, Bell, ThumbsUp, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-type DashboardTab = "overview" | "performance" | "conversations" | "alerts" | "feedback";
+type DashboardTab = "overview" | "performance" | "conversations" | "alerts" | "feedback" | "engagement";
 
 interface ObserveDashboardLayoutProps {
   children: React.ReactNode;
@@ -34,6 +34,7 @@ export function ObserveDashboardLayout({
     { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" /> },
     { id: "performance", label: "Performance", icon: <Activity className="h-5 w-5" /> },
     { id: "conversations", label: "Conversations", icon: <MessageSquare className="h-5 w-5" /> },
+    { id: "engagement", label: "User Engagement", icon: <Users className="h-5 w-5" /> },
     { id: "alerts", label: "Alerts", icon: <Bell className="h-5 w-5" /> },
     { id: "feedback", label: "Feedback", icon: <ThumbsUp className="h-5 w-5" /> }
   ];
