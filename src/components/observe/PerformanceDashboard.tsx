@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, AreaChart, BarChart, ScatterChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Scatter, ZAxis, Legend, ErrorBar } from "recharts";
 import { ChartContainer, ChartTooltipContent, ChartTooltip, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -139,44 +138,6 @@ const chartConfig = {
   }
 };
 
-// New data for performance heatmap
-const latencyByTimeData = [
-  { hour: "00:00", monday: 310, tuesday: 320, wednesday: 330, thursday: 340, friday: 320, saturday: 300, sunday: 290 },
-  { hour: "04:00", monday: 330, tuesday: 340, wednesday: 350, thursday: 360, friday: 340, saturday: 310, sunday: 300 },
-  { hour: "08:00", monday: 380, tuesday: 390, wednesday: 410, thursday: 420, friday: 400, saturday: 340, sunday: 330 },
-  { hour: "12:00", monday: 420, tuesday: 430, wednesday: 450, thursday: 460, friday: 440, saturday: 380, sunday: 360 },
-  { hour: "16:00", monday: 400, tuesday: 410, wednesday: 430, thursday: 440, friday: 420, saturday: 360, sunday: 340 },
-  { hour: "20:00", monday: 350, tuesday: 360, wednesday: 370, thursday: 380, friday: 360, saturday: 330, sunday: 320 },
-];
-
-const latencyByAppData = [
-  { name: "Customer Support", median: 320, q1: 280, q3: 380, min: 240, max: 450 },
-  { name: "Product Assistant", median: 290, q1: 250, q3: 340, min: 220, max: 410 },
-  { name: "Internal Tool", median: 380, q1: 330, q3: 440, min: 290, max: 520 },
-  { name: "Website Chat", median: 310, q1: 270, q3: 370, min: 230, max: 440 },
-  { name: "Sales Assistant", median: 340, q1: 300, q3: 400, min: 260, max: 480 },
-];
-
-// New data for summarization effectiveness
-const summaryComparisonData = [
-  { name: "With Summary", value: 8 },
-  { name: "Without Summary", value: 22 },
-];
-
-const summaryFeedbackData = [
-  { name: "Positive", value: 72 },
-  { name: "Neutral", value: 18 },
-  { name: "Negative", value: 10 },
-];
-
-const summaryMetricsData = [
-  { name: "Conversation Time", withSummary: -35, withoutSummary: 0 },
-  { name: "Messages Count", withSummary: -45, withoutSummary: 0 },
-  { name: "User Satisfaction", withSummary: 25, withoutSummary: 0 },
-  { name: "Task Completion", withSummary: 18, withoutSummary: 0 },
-];
-
-// Update chart config with new colors
 const extendedChartConfig = {
   ...chartConfig,
   monday: {
@@ -230,7 +191,6 @@ const renderScatterShape = (props: any) => {
   );
 };
 
-// Create a custom shape renderer for the feedback bar
 const renderPositiveNegativeFeedbackBar = (props: any) => {
   const { x, y, width, height, value, name } = props;
   
@@ -245,12 +205,12 @@ const renderPositiveNegativeFeedbackBar = (props: any) => {
       width={width} 
       height={height} 
       fill={fill} 
-      radius={[4, 4, 0, 0]}
+      rx={4}
+      ry={4}
     />
   );
 };
 
-// Create a custom shape renderer for the summary metrics bar
 const renderSummaryMetricsBar = (props: any) => {
   const { x, y, width, height, value } = props;
   
@@ -263,7 +223,8 @@ const renderSummaryMetricsBar = (props: any) => {
       width={width} 
       height={height} 
       fill={fill} 
-      radius={4}
+      rx={4}
+      ry={4}
     />
   );
 };
