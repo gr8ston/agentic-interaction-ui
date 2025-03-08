@@ -14,8 +14,9 @@ import {
   ChatBubbleActionWrapper,
   ChatBubbleAction
 } from "@/components/ui/chat-bubble";
-import { Copy, Info } from "lucide-react";
+import { Clock, Cpu, Copy, Info, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ChatMessageProps {
   message: ConversationMessage;
@@ -54,13 +55,34 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {!isUser && (message.metrics || message.verbose) && (
           <div className="mt-1">
             {message.metrics && (
-              <div className="message-metrics">
-                <span className="message-metric-badge">
-                  Latency: {message.metrics.latency.toFixed(2)}s
-                </span>
-                <span className="message-metric-badge">
-                  Tokens: {message.metrics.tokens.input} in, {message.metrics.tokens.output} out
-                </span>
+              <div className="flex space-x-2 mt-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                        <Clock size={12} className="animate-pulse" />
+                        <span>{message.metrics.latency.toFixed(2)}s</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Response latency</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
+                        <Zap size={12} />
+                        <span>{message.metrics.tokens.input} in, {message.metrics.tokens.output} out</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Tokens consumed</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             )}
             
@@ -79,12 +101,25 @@ export function ChatMessage({ message }: ChatMessageProps) {
                             {message.verbose.promptForComposition}
                           </p>
                         </div>
+                        
                         <div>
                           <h4 className="font-medium text-brand-primary mb-1">Reasoning Process</h4>
-                          <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">
-                            {message.verbose.composition}
-                          </p>
+                          <div className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">
+                            <code className="font-mono text-sm">
+                              {message.verbose.composition}
+                            </code>
+                          </div>
                         </div>
+                        
+                        {message.verbose.rawResults && (
+                          <div>
+                            <h4 className="font-medium text-brand-primary mb-1">Raw Results</h4>
+                            <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 font-mono text-sm">
+                              {message.verbose.rawResults}
+                            </p>
+                          </div>
+                        )}
+                        
                         <div>
                           <h4 className="font-medium text-brand-primary mb-1">Enhanced Prompt</h4>
                           <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">

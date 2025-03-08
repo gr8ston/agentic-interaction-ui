@@ -12,6 +12,63 @@ export function ConversationContainer() {
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
 
+  // Example messages for demonstration
+  useEffect(() => {
+    const exampleMessages: ConversationMessage[] = [
+      {
+        id: 'user-example-1',
+        role: 'user',
+        content: 'hi',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: 'agent-example-1',
+        role: 'agent',
+        content: 'Hi there! How can I help you?',
+        timestamp: new Date().toISOString(),
+        metrics: {
+          latency: 1.3,
+          tokens: {
+            input: 9,
+            output: 23,
+          },
+        },
+        verbose: {
+          promptForComposition: 'hi',
+          composition: 'Let me think about how to respond to this question... I\'ll need to consider the context and provide a helpful, accurate answer based on the information I have. I should break down my reasoning step by step to ensure my response is well-structured and logical.',
+          promptForEnhancedResponse: 'Question: hi\n\nPlease reason step by step and then provide the final answer.',
+        },
+      },
+      {
+        id: 'user-example-2',
+        role: 'user',
+        content: 'What is the capital of France?',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: 'agent-example-2',
+        role: 'agent',
+        content: 'Paris is the capital of France. Its attractions are Eiffel Tower, Louvre Museum, etc.',
+        timestamp: new Date().toISOString(),
+        metrics: {
+          latency: 0.85,
+          tokens: {
+            input: 10,
+            output: 5,
+          },
+        },
+        verbose: {
+          promptForComposition: 'You are a composition expert. User asked: What is the capital of France? ..........',
+          composition: 'Find_Attractions(Find_Capital("France"))',
+          rawResults: 'Paris | Eiffel Tower, Louvre Museum',
+          promptForEnhancedResponse: 'Based on the raw results, and the users question.... provide answer in a concierge manner.',
+        },
+      },
+    ];
+
+    setMessages(exampleMessages);
+  }, []);
+
   const handleSendMessage = async (content: string) => {
     // Add user message to chat
     const userMessage: ConversationMessage = {
@@ -50,6 +107,7 @@ export function ConversationContainer() {
           promptForComposition: response.prompt_for_composition,
           composition: response.composition,
           promptForEnhancedResponse: response.prompt_for_enhanced_response,
+          rawResults: response.raw_results,
         },
       };
       

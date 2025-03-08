@@ -34,6 +34,7 @@ export interface ConversationMessage {
     promptForComposition: string;
     composition: string;
     promptForEnhancedResponse: string;
+    rawResults?: string;
   };
 }
 
@@ -59,4 +60,5 @@ export interface ConversationResponse {
   prompt_for_composition: string;
   composition: string;
   prompt_for_enhanced_response: string;
+  raw_results?: string;
 }
