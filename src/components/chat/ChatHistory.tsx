@@ -2,6 +2,7 @@
 import { ConversationMessage } from "@/types/api";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
+import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from "@/components/ui/chat-bubble";
 
 interface ChatHistoryProps {
   messages: ConversationMessage[];
@@ -37,15 +38,10 @@ export function ChatHistory({ messages, isTyping = false }: ChatHistoryProps) {
           ))}
           
           {isTyping && (
-            <div className="flex items-start">
-              <div className="chat-message-agent">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span style={{ animationDelay: "0.2s" }}></span>
-                  <span style={{ animationDelay: "0.4s" }}></span>
-                </div>
-              </div>
-            </div>
+            <ChatBubble variant="received">
+              <ChatBubbleAvatar fallback="A" />
+              <ChatBubbleMessage isLoading />
+            </ChatBubble>
           )}
           
           <div ref={messagesEndRef} />
