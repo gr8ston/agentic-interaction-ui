@@ -2,7 +2,7 @@
 import { LoginDrawer } from "@/components/LoginDrawer";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Activity, LineChart, FunctionSquare, Bell } from "lucide-react";
+import { BarChart3, Activity, LineChart, FunctionSquare, Bell, Rocket } from "lucide-react";
 import React, { useState } from "react";
 import { ObserveFeatureChart } from "@/components/ObserveFeatureChart";
 import { Link } from "react-router-dom";
