@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { User } from "@/types/api";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -25,11 +25,13 @@ const formSchema = z.object({
   }),
 });
 
+type LoginFormValues = z.infer<typeof formSchema>;
+
 export function LoginForm() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
@@ -37,10 +39,14 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     try {
-      await login(values);
+      const credentials: User = {
+        username: values.username,
+        password: values.password,
+      };
+      await login(credentials);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
