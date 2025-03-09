@@ -36,7 +36,7 @@ export const getTotalTokens = (tokenValue: any): number => {
     }
     // Sum up all numeric values in the object
     else {
-      return Object.values(tokenValue).reduce((sum, val) => 
+      return Object.values(tokenValue).reduce((sum: number, val: any) => 
         sum + (typeof val === 'number' ? val : (typeof val === 'string' ? Number(val) || 0 : 0)), 0);
     }
   } 

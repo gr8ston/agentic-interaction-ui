@@ -6,7 +6,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ConversationMessage } from "@/types/api";
 import { X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTotalTokens } from "@/integrations/supabase/client";
 
 // Helper function to format the message from Supabase data to our UI format
 const formatMessage = (message: any): ConversationMessage => {

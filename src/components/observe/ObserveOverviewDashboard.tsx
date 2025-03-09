@@ -37,6 +37,11 @@ interface ConversationDetails {
   }[];
 }
 
+// Extended AppUsageMetric with percentage property
+interface ExtendedAppUsageMetric extends AppUsageMetric {
+  percentage: number;
+}
+
 interface ObserveOverviewDashboardProps {
   onConversationSelect?: (conversationId: string) => void;
 }
@@ -55,7 +60,7 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
     tokensChange: 0
   });
   const [conversationTrends, setConversationTrends] = useState<DailyMetric[]>([]);
-  const [appUsage, setAppUsage] = useState<AppUsageMetric[]>([]);
+  const [appUsage, setAppUsage] = useState<ExtendedAppUsageMetric[]>([]);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [hasError, setHasError] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -172,15 +177,24 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
       
       if (results[2].status === 'fulfilled') {
         console.log("App usage data received:", results[2].value);
-        setAppUsage(results[2].value);
+        // Add percentage property to app usage data
+        const appUsageData = results[2].value;
+        const totalApps = appUsageData.reduce((sum, app) => sum + app.value, 0);
+        
+        const enhancedAppUsage = appUsageData.map(app => ({
+          ...app,
+          percentage: totalApps > 0 ? Math.round((app.value / totalApps) * 100) : 0
+        }));
+        
+        setAppUsage(enhancedAppUsage);
       } else {
         console.error("Error fetching app usage:", results[2].reason);
         setAppUsage([
-          { name: 'weather_app', value: 2 },
-          { name: 'travel_planner', value: 2 },
-          { name: 'recipe_finder', value: 2 },
-          { name: 'workout_planner', value: 2 },
-          { name: 'shopping_assistant', value: 2 }
+          { name: 'weather_app', value: 2, percentage: 20 },
+          { name: 'travel_planner', value: 2, percentage: 20 },
+          { name: 'recipe_finder', value: 2, percentage: 20 },
+          { name: 'workout_planner', value: 2, percentage: 20 },
+          { name: 'shopping_assistant', value: 2, percentage: 20 }
         ]);
         setHasError(true);
       }
