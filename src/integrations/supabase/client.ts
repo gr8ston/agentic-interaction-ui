@@ -19,40 +19,42 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 });
 
 // Helper function to safely convert token values from various formats
-export const getTotalTokens = (tokenValue: any): number => {
+export const getTotalTokens = (tokenValue: unknown): number => {
   // If it's null/undefined, return 0
   if (tokenValue === null || tokenValue === undefined) {
     return 0;
   }
   
-  if (typeof tokenValue === 'object') {
+  if (typeof tokenValue === 'object' && tokenValue !== null) {
     // Check for OpenAI format with prompt_tokens and completion_tokens
-    if ('prompt_tokens' in tokenValue && 'completion_tokens' in tokenValue) {
-      const promptTokens = typeof tokenValue.prompt_tokens === 'number' 
-        ? tokenValue.prompt_tokens 
-        : Number(tokenValue.prompt_tokens || 0);
+    const tokenObj = tokenValue as Record<string, unknown>;
+    
+    if ('prompt_tokens' in tokenObj && 'completion_tokens' in tokenObj) {
+      const promptTokens = typeof tokenObj.prompt_tokens === 'number' 
+        ? tokenObj.prompt_tokens 
+        : Number(tokenObj.prompt_tokens || 0);
       
-      const completionTokens = typeof tokenValue.completion_tokens === 'number' 
-        ? tokenValue.completion_tokens 
-        : Number(tokenValue.completion_tokens || 0);
+      const completionTokens = typeof tokenObj.completion_tokens === 'number' 
+        ? tokenObj.completion_tokens 
+        : Number(tokenObj.completion_tokens || 0);
         
       return promptTokens + completionTokens;
     }
     // Check for standard format with input and output fields
-    else if ('input' in tokenValue && 'output' in tokenValue) {
-      const inputTokens = typeof tokenValue.input === 'number' 
-        ? tokenValue.input 
-        : Number(tokenValue.input || 0);
+    else if ('input' in tokenObj && 'output' in tokenObj) {
+      const inputTokens = typeof tokenObj.input === 'number' 
+        ? tokenObj.input 
+        : Number(tokenObj.input || 0);
         
-      const outputTokens = typeof tokenValue.output === 'number' 
-        ? tokenValue.output 
-        : Number(tokenValue.output || 0);
+      const outputTokens = typeof tokenObj.output === 'number' 
+        ? tokenObj.output 
+        : Number(tokenObj.output || 0);
         
       return inputTokens + outputTokens;
     }
     // Sum up all numeric values in the object
     else {
-      return Object.values(tokenValue).reduce((sum: number, val: any) => {
+      return Object.values(tokenObj).reduce((sum: number, val: unknown) => {
         const numVal = typeof val === 'number' ? val : Number(val || 0);
         return sum + (isNaN(numVal) ? 0 : numVal);
       }, 0);

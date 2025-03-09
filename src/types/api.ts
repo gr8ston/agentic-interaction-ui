@@ -64,8 +64,11 @@ export interface ConversationResponse {
 }
 
 // Extended AppUsageMetric interface with percentage property
-export interface ExtendedAppUsageMetric {
+export interface AppUsageMetric {
   name: string;
   value: number;
+}
+
+export interface ExtendedAppUsageMetric extends AppUsageMetric {
   percentage: number;
 }
