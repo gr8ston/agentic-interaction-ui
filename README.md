@@ -1,69 +1,107 @@
-# Welcome to your Lovable project
+# mAI AgenticFramework UI
 
-## Project info
+A modern React application that serves as the user interface for both the mAI AgenticFramework chatbot and its observability dashboard.
 
-**URL**: https://lovable.dev/projects/7d227927-f8ef-4304-8dad-454d3e783443
+## Project Overview
 
-## How can I edit this code?
+This project provides two main interfaces:
 
-There are several ways of editing your application.
+1. **Framework UI**: A chat interface allowing users to interact with the mAI AgenticFramework, an advanced agentic AI system.
 
-**Use Lovable**
+2. **Observability UI**: A dashboard interface displaying performance metrics and analytics for AI interactions.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7d227927-f8ef-4304-8dad-454d3e783443) and start prompting.
+## Key Features
 
-Changes made via Lovable will be committed automatically to this repo.
+### Framework UI
 
-**Use your preferred IDE**
+- **Interactive Chat Interface**: Engage with the AI agent through a clean, intuitive chat interface
+- **Real-time Metrics**: View performance data for each AI response including latency and token consumption
+- **Authentication**: Secure user authentication to access the chat interface
+- **Detailed Response Analysis**: Access verbose information about response generation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Observability Dashboard
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Performance Metrics**: Visualize key AI performance indicators
+- **Comparison Charts**: Compare mAI performance with other frameworks
+- **Historical Data**: Track performance trends over time
+- **Detailed Analytics**: Drill down into specific metrics for deeper analysis
 
-Follow these steps:
+## Technical Architecture
+
+- **Frontend**: React with TypeScript, built with Vite
+- **UI Components**: shadcn/ui components with Tailwind CSS
+- **State Management**: React Context API with TanStack Query for data fetching
+- **Routing**: React Router for navigation
+- **Authentication**: Custom authentication with Supabase
+- **Database**: Supabase for storing user data and metrics
+
+## How It Works
+
+1. Users interact with the AI through the chat interface
+2. The framework processes requests and returns responses
+3. Performance metrics are captured and stored in Supabase
+4. The observability dashboard visualizes these metrics
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn package manager
+
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone <repository-url>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd agentic-interaction-ui
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Install dependencies
+npm install
+# or
+yarn
 ```
 
-**Edit a file directly in GitHub**
+### Running the Application
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+# Start development server
+npm run dev
+# or
+yarn dev
+```
 
-**Use GitHub Codespaces**
+npx -y @modelcontextprotocol/server-postgres postgresql://postgres.qijceioeubmccdmissne:sT!Bz69ZZGbd6YF@aws-0-us-east-2.pooler.supabase.com:5432/postgres
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
 
-This project is built with .
+The application will be available at http://localhost:8080.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Building for Production
 
-## How can I deploy this project?
+```sh
+# Build for production
+npm run build
+# or
+yarn build
+```
 
-Simply open [Lovable](https://lovable.dev/projects/7d227927-f8ef-4304-8dad-454d3e783443) and click on Share -> Publish.
+## Project Structure
 
-## I want to use a custom domain - is that possible?
+- `src/components`: UI components
+- `src/contexts`: React context providers
+- `src/hooks`: Custom React hooks
+- `src/pages`: Application pages
+- `src/services`: API service functions
+- `src/types`: TypeScript type definitions
+- `src/lib`: Utility functions and constants
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Contributing
+
+Guidelines for contributing to the project.
+
+## License
+
+Information about the project license.

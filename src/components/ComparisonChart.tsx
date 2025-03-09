@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { 
   BarChart, 
   Bar, 
@@ -19,28 +18,7 @@ import {
   ChartLegend,
   type ChartConfig
 } from "@/components/ui/chart";
-
-// Data for each category
-const responseTimeData = [
-  { name: "mAI", value: 400, color: "#005B99", best: true },
-  { name: "CrewAI", value: 15000, color: "#888888", best: false },
-  { name: "Autogen", value: 7000, color: "#888888", best: false },
-  { name: "LangGraph", value: 8000, color: "#888888", best: false }
-];
-
-const accuracyData = [
-  { name: "mAI", value: 92, color: "#005B99", best: true },
-  { name: "CrewAI", value: 72, color: "#888888", best: false },
-  { name: "Autogen", value: 80, color: "#888888", best: false },
-  { name: "LangGraph", value: 83, color: "#888888", best: false }
-];
-
-const tokenUsageData = [
-  { name: "mAI", value: 50, color: "#005B99", best: true },
-  { name: "CrewAI", value: 100, color: "#888888", best: false },
-  { name: "Autogen", value: 100, color: "#888888", best: false },
-  { name: "LangGraph", value: 100, color: "#888888", best: false }
-];
+import { supabaseService } from "@/services/supabase-service";
 
 // Create chart configs
 const responseTimeConfig: ChartConfig = {
@@ -82,59 +60,67 @@ const MetricChart = ({
   title, 
   tooltip, 
   category, 
-  config 
+  config,
+  isLoading
 }: { 
   data: any[],
   title: string, 
   tooltip: string,
   category: string,
-  config: ChartConfig
+  config: ChartConfig,
+  isLoading: boolean
 }) => {
   return (
     <div className="mb-6">
       <h4 className="text-sm font-medium mb-1 text-gray-700">{title}</h4>
       <p className="text-xs text-gray-500 mb-3">{tooltip}</p>
       
-      <ChartContainer config={config} className="h-[250px] w-full">
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={true} />
-          <XAxis type="number" hide={category === "tokenUsage"} />
-          <YAxis 
-            type="category" 
-            dataKey="name" 
-            width={80} 
-            axisLine={false}
-            tickLine={false}
-          />
-          <ChartTooltip 
-            content={
-              <ChartTooltipContent 
-                formatter={(value, name) => {
-                  return [formatValue(value as number, category), name];
-                }}
-              />
-            } 
-          />
-          <Bar 
-            dataKey="value" 
-            radius={[0, 4, 4, 0]}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-[250px]">
+          <div className="animate-spin rounded-full border-t-4 border-brand-primary border-opacity-50 h-8 w-8"></div>
+        </div>
+      ) : (
+        <ChartContainer config={config} className="h-[250px] w-full">
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
           >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`}
-                fill={`var(--color-${entry.name})`}
-                opacity={entry.best ? 1 : 0.6}
-                strokeWidth={entry.best ? 2 : 0}
-                stroke={entry.best ? "#007ACC" : "none"}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ChartContainer>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={true} />
+            <XAxis type="number" hide={category === "tokenUsage"} />
+            <YAxis 
+              type="category" 
+              dataKey="name" 
+              width={80} 
+              axisLine={false}
+              tickLine={false}
+            />
+            <ChartTooltip 
+              content={
+                <ChartTooltipContent 
+                  formatter={(value, name) => {
+                    return [formatValue(value as number, category), name];
+                  }}
+                />
+              } 
+            />
+            <Bar 
+              dataKey="value" 
+              radius={[0, 4, 4, 0]}
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`}
+                  fill={`var(--color-${entry.name})`}
+                  opacity={entry.best ? 1 : 0.6}
+                  strokeWidth={entry.best ? 2 : 0}
+                  stroke={entry.best ? "#007ACC" : "none"}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+      )}
 
       {category === "tokenUsage" && (
         <div className="flex justify-center mt-2">
@@ -150,6 +136,28 @@ const MetricChart = ({
 
 export function ComparisonChart() {
   const isMobile = useIsMobile();
+  const [isLoading, setIsLoading] = useState(true);
+  const [responseTimeData, setResponseTimeData] = useState([]);
+  const [accuracyData, setAccuracyData] = useState([]);
+  const [tokenUsageData, setTokenUsageData] = useState([]);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const comparisonData = await supabaseService.getFrameworkComparison();
+        setResponseTimeData(comparisonData.responseTimeData);
+        setAccuracyData(comparisonData.accuracyData);
+        setTokenUsageData(comparisonData.tokenUsageData);
+      } catch (error) {
+        console.error("Error fetching comparison data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   return (
     <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 overflow-hidden">
@@ -161,6 +169,7 @@ export function ComparisonChart() {
         tooltip="Lower is better"
         category="responseTime"
         config={responseTimeConfig}
+        isLoading={isLoading}
       />
       
       <MetricChart 
@@ -169,6 +178,7 @@ export function ComparisonChart() {
         tooltip="Higher is better"
         category="accuracy"
         config={accuracyConfig}
+        isLoading={isLoading}
       />
       
       <MetricChart 
@@ -177,6 +187,7 @@ export function ComparisonChart() {
         tooltip="Lower is better"
         category="tokenUsage"
         config={tokenUsageConfig}
+        isLoading={isLoading}
       />
     </div>
   );
