@@ -62,3 +62,10 @@ export interface ConversationResponse {
   prompt_for_enhanced_response: string;
   raw_results?: string;
 }
+
+// Extended AppUsageMetric interface with percentage property
+export interface ExtendedAppUsageMetric {
+  name: string;
+  value: number;
+  percentage: number;
+}

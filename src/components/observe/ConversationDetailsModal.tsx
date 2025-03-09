@@ -21,43 +21,45 @@ const formatMessage = (message: any): ConversationMessage => {
   if (message.tokens_consumed && typeof message.tokens_consumed === 'object') {
     // Check for OpenAI format with prompt_tokens and completion_tokens
     if ('prompt_tokens' in message.tokens_consumed && 'completion_tokens' in message.tokens_consumed) {
-      inputTokens = Number(message.tokens_consumed.prompt_tokens) || 0;
-      outputTokens = Number(message.tokens_consumed.completion_tokens) || 0;
+      inputTokens = Number(message.tokens_consumed.prompt_tokens || 0);
+      outputTokens = Number(message.tokens_consumed.completion_tokens || 0);
       
       console.log(`Extracted tokens from OpenAI format: input=${inputTokens}, output=${outputTokens}`);
     }
     // Check for our standard format with input and output fields
     else if ('input' in message.tokens_consumed && 'output' in message.tokens_consumed) {
-      inputTokens = Number(message.tokens_consumed.input) || 0;
-      outputTokens = Number(message.tokens_consumed.output) || 0;
+      inputTokens = Number(message.tokens_consumed.input || 0);
+      outputTokens = Number(message.tokens_consumed.output || 0);
       
       console.log(`Extracted tokens from standard format: input=${inputTokens}, output=${outputTokens}`);
     }
     // If it's some other object format, try to extract whatever is available
     else {
       console.log(`Unknown token format: ${JSON.stringify(message.tokens_consumed)}`);
-      inputTokens = Object.values(message.tokens_consumed).reduce((sum: number, val: any) => 
-        sum + (typeof val === 'number' ? val : 0), 0);
+      const totalTokens = getTotalTokens(message.tokens_consumed);
       
       // Split the total based on role (33% input, 67% output for AI messages)
       if (message.role === 'system' || message.role === 'agent') {
-        const total = inputTokens;
-        inputTokens = Math.floor(total * 0.33);
-        outputTokens = Math.floor(total * 0.67);
+        inputTokens = Math.floor(totalTokens * 0.33);
+        outputTokens = Math.floor(totalTokens * 0.67);
       } else {
-        outputTokens = 0; // For user messages, all tokens are input
+        inputTokens = totalTokens; // For user messages, all tokens are input
+        outputTokens = 0;
       }
     }
-  } else if (message.tokens_consumed && typeof message.tokens_consumed === 'number') {
-    // Old integer format - split based on role
+  } else if (message.tokens_consumed) {
+    // Handle non-object token values (like plain numbers)
+    const totalTokens = getTotalTokens(message.tokens_consumed);
+    
+    // Split based on role
     if (message.role === 'system' || message.role === 'agent') {
-      inputTokens = Math.floor(Number(message.tokens_consumed) * 0.33);
-      outputTokens = Math.floor(Number(message.tokens_consumed) * 0.67);
-      console.log(`Split integer tokens (${message.tokens_consumed}): input=${inputTokens}, output=${outputTokens}`);
+      inputTokens = Math.floor(totalTokens * 0.33);
+      outputTokens = Math.floor(totalTokens * 0.67);
+      console.log(`Split tokens (${totalTokens}): input=${inputTokens}, output=${outputTokens}`);
     } else {
-      inputTokens = Number(message.tokens_consumed);
+      inputTokens = totalTokens;
       outputTokens = 0;
-      console.log(`Integer tokens for user: input=${inputTokens}, output=${outputTokens}`);
+      console.log(`Tokens for user: input=${inputTokens}, output=${outputTokens}`);
     }
   }
   

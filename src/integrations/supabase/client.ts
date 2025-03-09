@@ -28,21 +28,40 @@ export const getTotalTokens = (tokenValue: any): number => {
   if (typeof tokenValue === 'object') {
     // Check for OpenAI format with prompt_tokens and completion_tokens
     if ('prompt_tokens' in tokenValue && 'completion_tokens' in tokenValue) {
-      return Number(tokenValue.prompt_tokens || 0) + Number(tokenValue.completion_tokens || 0);
+      const promptTokens = typeof tokenValue.prompt_tokens === 'number' 
+        ? tokenValue.prompt_tokens 
+        : Number(tokenValue.prompt_tokens || 0);
+      
+      const completionTokens = typeof tokenValue.completion_tokens === 'number' 
+        ? tokenValue.completion_tokens 
+        : Number(tokenValue.completion_tokens || 0);
+        
+      return promptTokens + completionTokens;
     }
     // Check for standard format with input and output fields
     else if ('input' in tokenValue && 'output' in tokenValue) {
-      return Number(tokenValue.input || 0) + Number(tokenValue.output || 0);
+      const inputTokens = typeof tokenValue.input === 'number' 
+        ? tokenValue.input 
+        : Number(tokenValue.input || 0);
+        
+      const outputTokens = typeof tokenValue.output === 'number' 
+        ? tokenValue.output 
+        : Number(tokenValue.output || 0);
+        
+      return inputTokens + outputTokens;
     }
     // Sum up all numeric values in the object
     else {
-      return Object.values(tokenValue).reduce((sum: number, val: any) => 
-        sum + (typeof val === 'number' ? val : (typeof val === 'string' ? Number(val) || 0 : 0)), 0);
+      return Object.values(tokenValue).reduce((sum: number, val: any) => {
+        const numVal = typeof val === 'number' ? val : Number(val || 0);
+        return sum + (isNaN(numVal) ? 0 : numVal);
+      }, 0);
     }
   } 
   
   // If it's a primitive value, convert to number
-  return typeof tokenValue === 'number' ? tokenValue : (Number(tokenValue) || 0);
+  const numValue = Number(tokenValue);
+  return isNaN(numValue) ? 0 : numValue;
 };
 
 // Log connection status
