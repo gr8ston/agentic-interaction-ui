@@ -1,122 +1,81 @@
+import { ChartConfig } from "@/components/ui/chart";
 
-// Chart configurations for styling and labels
-export const chartConfig = {
+// Basic chart config with blues and grays
+export const chartConfig: ChartConfig = {
   value: {
     label: "Latency (ms)",
-    color: "#007ACC"
+    color: "#3b82f6",
   },
-  tokens: {
-    label: "Token Usage",
-    color: "#3DA6FF"
+  date: {
+    label: "Date",
+    color: "#3b82f6",
   },
-  latency: {
-    label: "Latency (ms)",
-    color: "#007ACC"
-  },
-  customerSupport: {
-    label: "Customer Support",
-    color: "#4CAF50"
-  },
-  productAssistant: {
-    label: "Product Assistant",
-    color: "#2196F3"
-  },
-  internalTool: {
-    label: "Internal Tool",
-    color: "#9C27B0"
-  },
-  websiteChat: {
-    label: "Website Chat",
-    color: "#FF9800"
-  },
-  salesAssistant: {
-    label: "Sales Assistant",
-    color: "#F44336"
-  }
 };
 
-// Extended chart configuration for additional chart types
-export const extendedChartConfig = {
-  ...chartConfig,
+// Extended chart config with custom colors for days of week
+export const extendedChartConfig: ChartConfig = {
   monday: {
     label: "Monday",
-    color: "#8B5CF6"
+    color: "#4285F4", // Google Blue
   },
   tuesday: {
     label: "Tuesday",
-    color: "#3B82F6"
+    color: "#10a37f", // OpenAI Green
   },
   wednesday: {
     label: "Wednesday",
-    color: "#10B981"
+    color: "#b622ff", // Anthropic Purple
   },
   thursday: {
     label: "Thursday",
-    color: "#F59E0B"
+    color: "#7c3aed", // Mistral Violet
   },
   friday: {
     label: "Friday",
-    color: "#EC4899"
+    color: "#ff5a5f", // Cohere Red
   },
   saturday: {
     label: "Saturday",
-    color: "#6366F1"
+    color: "#f59e0b", // Amber
   },
   sunday: {
     label: "Sunday",
-    color: "#EF4444"
+    color: "#ec4899", // Pink
   },
-  withSummary: {
-    label: "With Summary",
-    color: "#10B981"
-  },
-  withoutSummary: {
-    label: "Without Summary",
-    color: "#9CA3AF"
-  }
 };
 
-// Provider-specific chart configuration
-export const providerChartConfig = {
-  ...chartConfig,
+// Provider-specific chart config
+export const providerChartConfig: ChartConfig = {
   OpenAI: {
     label: "OpenAI",
-    color: "#10a37f" // OpenAI green
+    color: "#10a37f",
   },
   Anthropic: {
     label: "Anthropic",
-    color: "#b622ff" // Anthropic purple
+    color: "#b622ff",
   },
   Google: {
     label: "Google",
-    color: "#4285F4" // Google blue
+    color: "#4285F4",
   },
   Mistral: {
     label: "Mistral",
-    color: "#7c3aed" // Violet color for Mistral
+    color: "#7c3aed",
   },
   Cohere: {
     label: "Cohere",
-    color: "#ff5a5f" // Red-ish color for Cohere
+    color: "#ff5a5f",
   },
   median: {
-    label: "Median",
-    color: "#64748b"
+    label: "Median Latency",
+    color: "#64748b",
   },
   q1: {
-    label: "Q1",
-    color: "#94a3b8"
+    label: "25th Percentile",
+    color: "#94a3b8",
   },
   q3: {
-    label: "Q3",
-    color: "#94a3b8"
+    label: "75th Percentile",
+    color: "#94a3b8",
   },
-  min: {
-    label: "Min",
-    color: "#cbd5e1"
-  },
-  max: {
-    label: "Max",
-    color: "#cbd5e1"
-  }
 };

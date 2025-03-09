@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { latencyOverTimeData } from '@/components/observe/performance/performanceData';
 
 // Helper function to calculate total tokens from a token value
 // This handles both the old integer format and the new JSON format
@@ -47,10 +48,81 @@ export interface RecentConversation {
   tokens: number;
 }
 
+export interface LatencyByTimeOfDay {
+  hour: number;
+  monday: number | null;
+  tuesday: number | null;
+  wednesday: number | null;
+  thursday: number | null;
+  friday: number | null;
+  saturday: number | null;
+  sunday: number | null;
+}
+
+export interface LatencyByApp {
+  name: string;
+  median: number;
+  q1: number;
+  q3: number;
+  min: number;
+  max: number;
+}
+
+/**
+ * Interface for latency data by provider over time
+ */
+export interface LatencyByProviderOverTime {
+  date: string;
+  [provider: string]: string | number | null | undefined;
+}
+
+/**
+ * Interface for token consumption vs latency data
+ */
+export interface TokenVsLatencyDataPoint {
+  tokens: number;      // Total tokens (input + output)
+  latency: number;     // Latency in milliseconds
+  model: string;       // Model name (e.g., "GPT-4", "Claude-3")
+  provider: string;    // Provider name (e.g., "OpenAI", "Anthropic")
+}
+
 // Helper function to calculate percentage change
 function calculatePercentageChange(current: number, previous: number): number {
   if (previous === 0) return 0;
   return ((current - previous) / previous) * 100;
+}
+
+// Define a type for the tokens_consumed JSONB structure
+interface TokenConsumption {
+  input: number;
+  output: number;
+}
+
+/**
+ * Interface for summarization message count comparison
+ */
+export interface SummarizationMessageCountComparison {
+  withSummary: number;
+  withoutSummary: number;
+}
+
+/**
+ * Interface for summarization feedback
+ */
+export interface SummarizationFeedback {
+  positive: number;
+  negative: number;
+  neutral: number;
+}
+
+/**
+ * Interface for summarization impact metrics
+ */
+export interface SummarizationImpact {
+  conversationTime: number;
+  messagesCount: number;
+  userSatisfaction: number;
+  taskCompletion: number;
 }
 
 export const supabaseService = {
@@ -1014,6 +1086,954 @@ export const supabaseService = {
       console.error("Exception in getLatencyOutliers:", error);
       return { outlierData: [], thresholdValue: 3000 };
     }
+  },
+
+  async getLatencyByTimeOfDay(startDate: Date, endDate: Date): Promise<LatencyByTimeOfDay[]> {
+    try {
+      // For now, always return mock data since we need to update the database schema first
+      // to include user_preferences and message.latency field
+      return this.getLatencyByTimeOfDayMock();
+
+      /* 
+      // This code will be uncommented when we have the proper database schema
+      // First check if development mode is enabled
+      const devMode = localStorage.getItem('developmentMode') === 'true';
+      
+      // Return mock data if in development mode
+      if (devMode) {
+        return this.getLatencyByTimeOfDayMock();
+      }
+
+      // Setup result array with 24 hours
+      const result: LatencyByTimeOfDay[] = Array.from({ length: 24 }, (_, i) => ({
+        hour: i,
+        monday: null,
+        tuesday: null,
+        wednesday: null,
+        thursday: null,
+        friday: null,
+        saturday: null,
+        sunday: null,
+      }));
+
+      // Format dates for query
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Get all messages with timestamps in the date range
+      // Only include messages with role="system" as they're the only ones with meaningful latency
+      const { data, error } = await supabase
+        .from('messages')
+        .select('created_at, latency')
+        .eq('role', 'system')  // <-- Add this filter for system messages only
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate)
+        .not('latency', 'is', null)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching latency by time of day data:', error);
+        return this.getLatencyByTimeOfDayMock();
+      }
+
+      if (!data || data.length === 0) {
+        return this.getLatencyByTimeOfDayMock();
+      }
+
+      // Process the data to group by day of week and hour
+      const dayGroups: { [key: string]: { [hour: number]: number[] } } = {
+        monday: {},
+        tuesday: {},
+        wednesday: {},
+        thursday: {},
+        friday: {},
+        saturday: {},
+        sunday: {},
+      };
+
+      // Initialize all hours for all days
+      for (let hour = 0; hour < 24; hour++) {
+        Object.keys(dayGroups).forEach(day => {
+          dayGroups[day][hour] = [];
+        });
+      }
+
+      // Map day number to day name
+      const dayMap: { [key: number]: string } = {
+        0: 'sunday',
+        1: 'monday',
+        2: 'tuesday',
+        3: 'wednesday',
+        4: 'thursday',
+        5: 'friday',
+        6: 'saturday',
+      };
+
+      // Group latency values by day and hour
+      data.forEach(message => {
+        if (message.latency) {
+          const date = new Date(message.created_at);
+          const dayOfWeek = dayMap[date.getDay()];
+          const hour = date.getHours();
+          
+          dayGroups[dayOfWeek][hour].push(message.latency);
+        }
+      });
+
+      // Calculate median latency for each hour and day
+      for (let hour = 0; hour < 24; hour++) {
+        Object.keys(dayGroups).forEach(day => {
+          const values = dayGroups[day][hour];
+          if (values.length > 0) {
+            // Calculate median
+            values.sort((a, b) => a - b);
+            const mid = Math.floor(values.length / 2);
+            const median = values.length % 2 === 0
+              ? (values[mid - 1] + values[mid]) / 2
+              : values[mid];
+            
+            result[hour][day as keyof Omit<LatencyByTimeOfDay, 'hour'>] = median;
+          }
+        });
+      }
+
+      return result;
+      */
+    } catch (err) {
+      console.error('Error in getLatencyByTimeOfDay:', err);
+      return this.getLatencyByTimeOfDayMock();
+    }
+  },
+
+  // Mock data for latency by time of day
+  getLatencyByTimeOfDayMock(): LatencyByTimeOfDay[] {
+    return Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      monday: 250 + Math.floor(Math.random() * 180),
+      tuesday: 260 + Math.floor(Math.random() * 190),
+      wednesday: 270 + Math.floor(Math.random() * 200),
+      thursday: 280 + Math.floor(Math.random() * 180),
+      friday: 290 + Math.floor(Math.random() * 170),
+      saturday: hour < 8 || hour > 20 ? null : 300 + Math.floor(Math.random() * 150),
+      sunday: hour < 9 || hour > 18 ? null : 310 + Math.floor(Math.random() * 140),
+    }));
+  },
+
+  async getLatencyByApp(startDate: Date, endDate: Date): Promise<LatencyByApp[]> {
+    try {
+      // For now, return mock data while we implement the database schema
+      return this.getLatencyByAppMock();
+      
+      /* This code will be uncommented when we have the proper schema
+      // Format dates for query
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Get conversations with their app names in the date range
+      const { data: conversationsData, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('conversation_id, app_name')
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate);
+
+      if (conversationsError || !conversationsData || conversationsData.length === 0) {
+        console.error('Error fetching conversations:', conversationsError);
+        return this.getLatencyByAppMock();
+      }
+
+      // Get all messages with latency information for these conversations
+      // Only include messages with role="system" as they're the only ones with meaningful latency
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('conversation_id, latency')
+        .eq('role', 'system')  // <-- Add this filter for system messages only
+        .in('conversation_id', conversationsData.map(conv => conv.conversation_id))
+        .not('latency', 'is', null);
+
+      if (messagesError || !messagesData || messagesData.length === 0) {
+        console.error('Error fetching messages:', messagesError);
+        return this.getLatencyByAppMock();
+      }
+
+      // Create a map from conversation_id to app_name
+      const conversationToApp = new Map();
+      conversationsData.forEach(conv => {
+        conversationToApp.set(conv.conversation_id, conv.app_name);
+      });
+
+      // Group latency values by app
+      const appLatencyValues: Record<string, number[]> = {};
+      
+      messagesData.forEach(message => {
+        const appName = conversationToApp.get(message.conversation_id);
+        if (appName && message.latency) {
+          if (!appLatencyValues[appName]) {
+            appLatencyValues[appName] = [];
+          }
+          appLatencyValues[appName].push(message.latency);
+        }
+      });
+
+      // Calculate statistics for each app
+      const result: LatencyByApp[] = [];
+      
+      Object.entries(appLatencyValues).forEach(([appName, latencies]) => {
+        if (latencies.length >= 5) { // Only include apps with enough data
+          latencies.sort((a, b) => a - b);
+          
+          const min = latencies[0];
+          const max = latencies[latencies.length - 1];
+          
+          const medianIndex = Math.floor(latencies.length / 2);
+          const median = latencies.length % 2 === 0
+            ? (latencies[medianIndex - 1] + latencies[medianIndex]) / 2
+            : latencies[medianIndex];
+          
+          const q1Index = Math.floor(latencies.length * 0.25);
+          const q1 = latencies[q1Index];
+          
+          const q3Index = Math.floor(latencies.length * 0.75);
+          const q3 = latencies[q3Index];
+          
+          result.push({
+            name: appName,
+            median,
+            q1,
+            q3,
+            min,
+            max
+          });
+        }
+      });
+
+      return result.sort((a, b) => a.median - b.median);
+      */
+    } catch (error) {
+      console.error('Error in getLatencyByApp:', error);
+      return this.getLatencyByAppMock();
+    }
+  },
+
+  // Mock data for latency by application
+  getLatencyByAppMock(): LatencyByApp[] {
+    const apps = [
+      "Customer Support",
+      "Product Assistant",
+      "Internal Tool",
+      "Website Chat",
+      "Sales Assistant"
+    ];
+    
+    return apps.map(app => {
+      const median = 300 + Math.floor(Math.random() * 200);
+      const range = 50 + Math.floor(Math.random() * 50);
+      const q1 = median - Math.floor(Math.random() * range);
+      const q3 = median + Math.floor(Math.random() * range);
+      const min = q1 - Math.floor(Math.random() * range);
+      const max = q3 + Math.floor(Math.random() * range);
+      
+      return {
+        name: app,
+        median,
+        q1,
+        q3,
+        min,
+        max
+      };
+    });
+  },
+
+  async getLatencyOverTimeByProvider(startDate: Date, endDate: Date): Promise<LatencyByProviderOverTime[]> {
+    try {
+      // Format dates for query
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Only query system messages with latency values
+      const { data, error } = await supabase
+        .from('messages')
+        .select('created_at, latency_ms, llm_provider')
+        .eq('role', 'system')  // Only system messages have meaningful latency
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate)
+        .not('latency_ms', 'is', null)
+        .not('llm_provider', 'is', null)
+        .order('created_at', { ascending: true });
+      
+      if (error || !data || data.length === 0) {
+        console.error('Error fetching provider latency data:', error);
+        return this.getLatencyOverTimeByProviderMock();
+      }
+      
+      // Collect all unique providers from the data
+      const uniqueProviders = new Set<string>();
+      data.forEach(message => {
+        if (message.llm_provider) {
+          uniqueProviders.add(message.llm_provider);
+        }
+      });
+      
+      // Convert to array for easier handling
+      const providers = Array.from(uniqueProviders);
+      
+      // Group latencies by date and provider
+      const dailyProviderData = new Map<string, Map<string, number[]>>();
+      
+      data.forEach(message => {
+        const date = message.created_at.split('T')[0]; // YYYY-MM-DD format
+        const provider = message.llm_provider;
+        
+        if (!dailyProviderData.has(date)) {
+          dailyProviderData.set(date, new Map<string, number[]>());
+        }
+        
+        if (!dailyProviderData.get(date)?.has(provider)) {
+          dailyProviderData.get(date)?.set(provider, []);
+        }
+        
+        dailyProviderData.get(date)?.get(provider)?.push(message.latency_ms);
+      });
+      
+      // Calculate daily averages for each provider
+      const result: LatencyByProviderOverTime[] = [];
+      
+      // Ensure we have an entry for each day in the range
+      const dayMillis = 24 * 60 * 60 * 1000;
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / dayMillis);
+      
+      for (let i = 0; i < days; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(currentDate.getDate() + i);
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        const dataPoint: LatencyByProviderOverTime = { date: dateStr };
+        
+        // Set values for each provider (or null if no data)
+        if (dailyProviderData.has(dateStr)) {
+          const providerMap = dailyProviderData.get(dateStr)!;
+          
+          providers.forEach(provider => {
+            if (providerMap.has(provider) && providerMap.get(provider)!.length > 0) {
+              // Calculate average latency
+              const latencies = providerMap.get(provider)!;
+              const sum = latencies.reduce((acc, val) => acc + val, 0);
+              dataPoint[provider] = Math.round(sum / latencies.length);
+            } else {
+              dataPoint[provider] = null; // No data for this provider on this day
+            }
+          });
+        } else {
+          // No data for any provider on this day
+          providers.forEach(provider => {
+            dataPoint[provider] = null;
+          });
+        }
+        
+        result.push(dataPoint);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in getLatencyOverTimeByProvider:', error);
+      return this.getLatencyOverTimeByProviderMock();
+    }
+  },
+
+  // Mock data for latency over time by provider
+  getLatencyOverTimeByProviderMock(): LatencyByProviderOverTime[] {
+    // Generate the last 12 days
+    const days = 12;
+    const result: LatencyByProviderOverTime[] = [];
+    
+    // Use generic provider names instead of hardcoding real company names
+    const mockProviders = ['Provider A', 'Provider B', 'Provider C', 'Provider D', 'Provider E'];
+    
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - (days - i - 1));
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dataPoint: LatencyByProviderOverTime = { date: dateStr };
+      
+      // Generate varying latency values for each provider
+      mockProviders.forEach((provider, index) => {
+        // Base value varies by provider index to create visual separation
+        const baseValue = 270 + (index * 20);
+        
+        // Add some randomness
+        dataPoint[provider] = baseValue + Math.floor(Math.random() * 30);
+      });
+      
+      result.push(dataPoint);
+    }
+    
+    return result;
+  },
+
+  /**
+   * Fetches latency vs tokens consumption data for the scatter chart
+   * @param startDate Start date for filtering 
+   * @param endDate End date for filtering
+   * @returns Array of data points with token consumption and latency values
+   */
+  async getTokenVsLatencyData(startDate: Date, endDate: Date): Promise<TokenVsLatencyDataPoint[]> {
+    try {
+      // Format dates for query
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Query messages with token consumption and latency data
+      const { data, error } = await supabase
+        .from('messages')
+        .select('message_id, latency_ms, tokens_consumed, llm_model, llm_provider')
+        .eq('role', 'system')  // Only system messages have meaningful latency and tokens
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate)
+        .not('latency_ms', 'is', null)
+        .not('tokens_consumed', 'is', null)
+        .not('llm_model', 'is', null)
+        .not('llm_provider', 'is', null);
+      
+      if (error || !data || data.length === 0) {
+        console.error('Error fetching token vs latency data:', error);
+        return this.getTokenVsLatencyDataMock();
+      }
+
+      // Process results to calculate total tokens for each message
+      const result: TokenVsLatencyDataPoint[] = [];
+      
+      data.forEach(message => {
+        // Parse tokens_consumed (we know it's always the new format with input and output)
+        // Use unknown as intermediate type for safe type conversion
+        const tokensData = message.tokens_consumed as unknown as TokenConsumption;
+        if (!tokensData || typeof tokensData.input !== 'number' || typeof tokensData.output !== 'number') {
+          return; // Skip entries with invalid token data
+        }
+        
+        // Calculate total tokens
+        const totalTokens = tokensData.input + tokensData.output;
+        
+        // Skip entries with zero tokens (shouldn't happen, but being safe)
+        if (totalTokens <= 0 || !message.latency_ms) {
+          return;
+        }
+        
+        // Add data point
+        result.push({
+          tokens: totalTokens,
+          latency: message.latency_ms,
+          model: message.llm_model,
+          provider: message.llm_provider
+        });
+      });
+      
+      // Filter out extreme outliers (optional)
+      // This prevents chart distortion from unusual data points
+      if (result.length > 10) {
+        // Calculate quartiles for latency
+        const latencies = result.map(point => point.latency).sort((a, b) => a - b);
+        const q1Index = Math.floor(latencies.length * 0.25);
+        const q3Index = Math.floor(latencies.length * 0.75);
+        const q1 = latencies[q1Index];
+        const q3 = latencies[q3Index];
+        const iqr = q3 - q1;
+        const lowerBound = q1 - 1.5 * iqr;
+        const upperBound = q3 + 1.5 * iqr;
+        
+        // Filter out latency outliers (values outside 1.5*IQR from Q1 and Q3)
+        return result.filter(point => 
+          point.latency >= lowerBound && 
+          point.latency <= upperBound
+        );
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in getTokenVsLatencyData:', error);
+      return this.getTokenVsLatencyDataMock();
+    }
+  },
+
+  /**
+   * Generates mock data for token vs latency scatter chart
+   */
+  getTokenVsLatencyDataMock(): TokenVsLatencyDataPoint[] {
+    const result: TokenVsLatencyDataPoint[] = [];
+    
+    // Generate mock data points for different providers and models
+    const providers = ['OpenAI', 'Anthropic', 'Google', 'Mistral', 'Cohere'];
+    const models = {
+      'OpenAI': ['GPT-4', 'GPT-3.5'],
+      'Anthropic': ['Claude 3 Opus', 'Claude 3 Sonnet', 'Claude 3 Haiku'],
+      'Google': ['Gemini Ultra', 'Gemini Pro'],
+      'Mistral': ['Mistral Large', 'Mistral Medium', 'Mistral Small'],
+      'Cohere': ['Command R', 'Command']
+    };
+    
+    // For each provider and model, generate some data points
+    providers.forEach(provider => {
+      const providerModels = models[provider as keyof typeof models] || [];
+      
+      providerModels.forEach(model => {
+        // Generate 20-30 data points per model
+        const numPoints = 20 + Math.floor(Math.random() * 10);
+        
+        // Base token consumption and latency vary by provider and model
+        let baseTokens: number, baseLatency: number, tokenVariance: number, latencyVariance: number;
+        
+        // Set different base values for different providers/models for visual separation
+        switch(provider) {
+          case 'OpenAI':
+            baseTokens = model === 'GPT-4' ? 800 : 600;
+            baseLatency = model === 'GPT-4' ? 350 : 300;
+            tokenVariance = 400;
+            latencyVariance = 100;
+            break;
+          case 'Anthropic':
+            baseTokens = 700;
+            baseLatency = 320;
+            tokenVariance = 350;
+            latencyVariance = 80;
+            break;
+          case 'Google':
+            baseTokens = 900;
+            baseLatency = 330;
+            tokenVariance = 300;
+            latencyVariance = 120;
+            break;
+          case 'Mistral':
+            baseTokens = 650;
+            baseLatency = 310;
+            tokenVariance = 280;
+            latencyVariance = 90;
+            break;
+          default:
+            baseTokens = 750;
+            baseLatency = 340;
+            tokenVariance = 320;
+            latencyVariance = 110;
+        }
+        
+        // Create data points with some randomness but also correlation
+        for (let i = 0; i < numPoints; i++) {
+          // Create some correlation between tokens and latency
+          const tokenFactor = Math.random();
+          const tokens = Math.round(baseTokens + tokenFactor * tokenVariance);
+          
+          // Latency is partly based on tokens (correlation) and partly random
+          const latencyRandomness = Math.random() * 0.5; // 50% randomness
+          const latencyCorrelation = tokenFactor * 0.5; // 50% correlation with tokens
+          const latency = Math.round(baseLatency + latencyCorrelation * latencyVariance + latencyRandomness * latencyVariance);
+          
+          result.push({
+            tokens,
+            latency,
+            model,
+            provider
+          });
+        }
+      });
+    });
+    
+    return result;
+  },
+
+  /**
+   * Fetches a comparison of message counts for conversations with and without summarization
+   */
+  async getSummarizationMessageCountComparison(startDate: Date, endDate: Date): Promise<SummarizationMessageCountComparison> {
+    try {
+      console.log("getSummarizationMessageCountComparison called with:", { startDate, endDate });
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Get all messages in the date range
+      const { data: messages, error: msgError } = await supabase
+        .from('messages')
+        .select('conversation_id, was_summarized')
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate);
+
+      console.log("Messages data:", { 
+        count: messages?.length || 0, 
+        error: msgError,
+        sampleConversations: messages?.slice(0, 10).map(m => m.conversation_id) || []
+      });
+
+      if (msgError || !messages || messages.length === 0) {
+        console.error('Error fetching messages:', msgError);
+        return this.getSummarizationMessageCountComparisonMock();
+      }
+
+      // Identify which conversations have summarization
+      const summarizedConvIds = new Set<string>();
+      const seenConversations = new Set<string>();
+      
+      messages.forEach(msg => {
+        seenConversations.add(msg.conversation_id);
+        if (msg.was_summarized) {
+          summarizedConvIds.add(msg.conversation_id);
+        }
+      });
+
+      console.log("Conversation counts:", { 
+        total: seenConversations.size,
+        summarized: summarizedConvIds.size,
+        nonSummarized: seenConversations.size - summarizedConvIds.size
+      });
+
+      // Count messages per conversation
+      const conversations: Record<string, { count: number, isSummarized: boolean }> = {};
+
+      messages.forEach(msg => {
+        if (!conversations[msg.conversation_id]) {
+          conversations[msg.conversation_id] = { 
+            count: 0, 
+            isSummarized: summarizedConvIds.has(msg.conversation_id) 
+          };
+        }
+        conversations[msg.conversation_id].count++;
+      });
+
+      // Calculate average message counts
+      let summarizedCount = 0;
+      let summarizedTotal = 0;
+      let nonSummarizedCount = 0;
+      let nonSummarizedTotal = 0;
+
+      Object.values(conversations).forEach(conv => {
+        if (conv.isSummarized) {
+          summarizedTotal += conv.count;
+          summarizedCount++;
+        } else {
+          nonSummarizedTotal += conv.count;
+          nonSummarizedCount++;
+        }
+      });
+
+      console.log("Calculation details:", {
+        summarizedCount,
+        summarizedTotal,
+        nonSummarizedCount,
+        nonSummarizedTotal
+      });
+
+      // If we don't have both types of conversations, return mock data
+      if (summarizedCount === 0 || nonSummarizedCount === 0) {
+        console.log("Missing one type of conversation, returning mock data");
+        return this.getSummarizationMessageCountComparisonMock();
+      }
+
+      // Calculate averages
+      const withSummary = Math.round(summarizedTotal / summarizedCount);
+      const withoutSummary = Math.round(nonSummarizedTotal / nonSummarizedCount);
+
+      console.log("Final comparison data:", { withSummary, withoutSummary });
+      return { withSummary, withoutSummary };
+    } catch (error) {
+      console.error('Error in getSummarizationMessageCountComparison:', error);
+      return this.getSummarizationMessageCountComparisonMock();
+    }
+  },
+
+  /**
+   * Fetches feedback statistics on conversations using summarization
+   */
+  async getSummarizationFeedback(startDate: Date, endDate: Date): Promise<SummarizationFeedback> {
+    try {
+      console.log("getSummarizationFeedback called with:", { startDate, endDate });
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Get all messages within date range (we'll filter by was_summarized after getting real data)
+      const { data: messagesData, error: msgError } = await supabase
+        .from('messages')
+        .select('message_id, created_at, was_summarized')
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate);
+
+      console.log("Messages data:", { count: messagesData?.length || 0, error: msgError });
+      
+      if (msgError || !messagesData || messagesData.length === 0) {
+        console.error('Error fetching messages:', msgError);
+        return this.getSummarizationFeedbackMock();
+      }
+
+      // Filter to get only summarized messages
+      const summarizedMessages = messagesData.filter(msg => msg.was_summarized);
+      console.log("Summarized messages count:", summarizedMessages.length);
+      
+      if (summarizedMessages.length === 0) {
+        console.log("No summarized messages found, returning mock data");
+        return this.getSummarizationFeedbackMock();
+      }
+
+      // Extract message IDs
+      const summarizedMessageIds = summarizedMessages.map(msg => msg.message_id);
+
+      // Get feedback for these messages
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('message_feedback')
+        .select('message_id, is_positive')
+        .in('message_id', summarizedMessageIds);
+
+      console.log("Feedback data:", { 
+        count: feedbackData?.length || 0, 
+        error: feedbackError,
+        sample: feedbackData?.slice(0, 3) || []
+      });
+
+      if (feedbackError) {
+        console.error('Error fetching feedback data:', feedbackError);
+        return this.getSummarizationFeedbackMock();
+      }
+
+      // Count feedback categories
+      let positiveCount = 0;
+      let negativeCount = 0;
+
+      if (feedbackData) {
+        positiveCount = feedbackData.filter(f => f.is_positive === true).length;
+        negativeCount = feedbackData.filter(f => f.is_positive === false).length;
+      }
+
+      // Messages without feedback are considered neutral
+      const neutralCount = summarizedMessageIds.length - (positiveCount + negativeCount);
+      console.log("Feedback counts:", { positiveCount, negativeCount, neutralCount });
+
+      // Calculate percentages
+      const total = summarizedMessageIds.length;
+      if (total === 0) {
+        console.log("Total is zero, returning mock data");
+        return this.getSummarizationFeedbackMock();
+      }
+      
+      const positive = Math.round((positiveCount / total) * 100);
+      const negative = Math.round((negativeCount / total) * 100);
+      const neutral = 100 - (positive + negative); // Ensure percentages add up to 100
+
+      console.log("Calculated percentages:", { positive, negative, neutral });
+      return { positive, negative, neutral };
+    } catch (error) {
+      console.error('Error in getSummarizationFeedback:', error);
+      return this.getSummarizationFeedbackMock();
+    }
+  },
+
+  /**
+   * Fetches impact metrics for conversations with summarization vs without
+   */
+  async getSummarizationImpact(startDate: Date, endDate: Date): Promise<SummarizationImpact> {
+    try {
+      console.log("getSummarizationImpact called with:", { startDate, endDate });
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
+      // Get all messages with their conversation and summarization status
+      const { data: messages, error: msgError } = await supabase
+        .from('messages')
+        .select('message_id, conversation_id, created_at, was_summarized')
+        .gte('created_at', formattedStartDate)
+        .lte('created_at', formattedEndDate)
+        .order('created_at', { ascending: true });
+
+      console.log("Messages query result:", { 
+        count: messages?.length || 0, 
+        error: msgError 
+      });
+
+      if (msgError || !messages || messages.length === 0) {
+        console.error('Error fetching messages:', msgError);
+        return this.getSummarizationImpactMock();
+      }
+
+      // Identify which conversations have summarization
+      const summarizedConvIds = new Set<string>();
+      messages.forEach(msg => {
+        if (msg.was_summarized) {
+          summarizedConvIds.add(msg.conversation_id);
+        }
+      });
+
+      console.log("Summarized conversations:", summarizedConvIds.size);
+
+      // Group messages by conversation
+      const conversationMessages: Record<string, typeof messages> = {};
+      messages.forEach(msg => {
+        if (!conversationMessages[msg.conversation_id]) {
+          conversationMessages[msg.conversation_id] = [];
+        }
+        conversationMessages[msg.conversation_id].push(msg);
+      });
+
+      // Calculate conversation times and message counts
+      const summarizedStats = { timeTotal: 0, messageTotal: 0, count: 0 };
+      const nonSummarizedStats = { timeTotal: 0, messageTotal: 0, count: 0 };
+
+      Object.entries(conversationMessages).forEach(([convId, msgs]) => {
+        if (msgs.length < 2) return; // Skip conversations with only one message
+
+        // Calculate conversation duration
+        const firstMsg = msgs[0];
+        const lastMsg = msgs[msgs.length - 1];
+        const startTime = new Date(firstMsg.created_at).getTime();
+        const endTime = new Date(lastMsg.created_at).getTime();
+        const duration = (endTime - startTime) / 1000; // Duration in seconds
+
+        // Add to appropriate stats
+        if (summarizedConvIds.has(convId)) {
+          summarizedStats.timeTotal += duration;
+          summarizedStats.messageTotal += msgs.length;
+          summarizedStats.count++;
+        } else {
+          nonSummarizedStats.timeTotal += duration;
+          nonSummarizedStats.messageTotal += msgs.length;
+          nonSummarizedStats.count++;
+        }
+      });
+
+      console.log("Statistics calculation:", {
+        summarized: summarizedStats,
+        nonSummarized: nonSummarizedStats
+      });
+
+      // Get feedback for messages to calculate satisfaction
+      // Only if we have a decent number of conversations in both categories
+      let userSatisfaction = 0;
+      let taskCompletion = 0;
+
+      if (summarizedStats.count > 0 && nonSummarizedStats.count > 0) {
+        // Get message IDs for feedback lookup
+        const allMessageIds = messages.map(msg => msg.message_id);
+
+        // Get feedback data
+        const { data: feedbackData, error: feedbackError } = await supabase
+          .from('message_feedback')
+          .select('message_id, is_positive')
+          .in('message_id', allMessageIds);
+
+        console.log("Feedback data:", { 
+          count: feedbackData?.length || 0, 
+          error: feedbackError 
+        });
+
+        if (!feedbackError && feedbackData && feedbackData.length > 0) {
+          // Group feedback by message
+          const feedbackByMessage: Record<string, boolean> = {};
+          feedbackData.forEach(feedback => {
+            feedbackByMessage[feedback.message_id] = feedback.is_positive;
+          });
+
+          // Calculate satisfaction rates
+          let summarizedPositiveFeedback = 0;
+          let summarizedFeedbackTotal = 0;
+          let nonSummarizedPositiveFeedback = 0;
+          let nonSummarizedFeedbackTotal = 0;
+
+          // Count positive feedback for each group
+          messages.forEach(msg => {
+            if (msg.message_id in feedbackByMessage) {
+              if (summarizedConvIds.has(msg.conversation_id)) {
+                summarizedFeedbackTotal++;
+                if (feedbackByMessage[msg.message_id]) {
+                  summarizedPositiveFeedback++;
+                }
+              } else {
+                nonSummarizedFeedbackTotal++;
+                if (feedbackByMessage[msg.message_id]) {
+                  nonSummarizedPositiveFeedback++;
+                }
+              }
+            }
+          });
+
+          console.log("Feedback calculations:", {
+            summarizedPositive: summarizedPositiveFeedback,
+            summarizedTotal: summarizedFeedbackTotal,
+            nonSummarizedPositive: nonSummarizedPositiveFeedback,
+            nonSummarizedTotal: nonSummarizedFeedbackTotal
+          });
+
+          // Calculate satisfaction percentages if we have enough data
+          if (summarizedFeedbackTotal > 0 && nonSummarizedFeedbackTotal > 0) {
+            const summarizedSatisfaction = (summarizedPositiveFeedback / summarizedFeedbackTotal) * 100;
+            const nonSummarizedSatisfaction = (nonSummarizedPositiveFeedback / nonSummarizedFeedbackTotal) * 100;
+            
+            // Calculate percentage change in satisfaction
+            userSatisfaction = calculatePercentageChange(summarizedSatisfaction, nonSummarizedSatisfaction);
+            
+            // For task completion, use the same satisfaction metrics
+            // (In a real implementation, you might have specific task completion data)
+            taskCompletion = userSatisfaction;
+          }
+        }
+      }
+
+      // Calculate averages and percentage changes
+      if (summarizedStats.count === 0 || nonSummarizedStats.count === 0) {
+        console.log("Not enough data in both categories, returning mock data");
+        return this.getSummarizationImpactMock();
+      }
+
+      const summarizedAvgTime = summarizedStats.timeTotal / summarizedStats.count;
+      const nonSummarizedAvgTime = nonSummarizedStats.timeTotal / nonSummarizedStats.count;
+      
+      const summarizedAvgMessages = summarizedStats.messageTotal / summarizedStats.count;
+      const nonSummarizedAvgMessages = nonSummarizedStats.messageTotal / nonSummarizedStats.count;
+
+      // Calculate percentage changes (negative means reduction, which is good for time and message count)
+      const conversationTime = calculatePercentageChange(summarizedAvgTime, nonSummarizedAvgTime) * -1;
+      const messagesCount = calculatePercentageChange(summarizedAvgMessages, nonSummarizedAvgMessages) * -1;
+
+      const result = {
+        conversationTime,
+        messagesCount,
+        userSatisfaction,
+        taskCompletion
+      };
+
+      console.log("Final impact metrics:", result);
+      return result;
+    } catch (error) {
+      console.error('Error in getSummarizationImpact:', error);
+      return this.getSummarizationImpactMock();
+    }
+  },
+
+  /**
+   * Mock data for summarization message count comparison
+   */
+  getSummarizationMessageCountComparisonMock(): SummarizationMessageCountComparison {
+    console.log("⚠️ Using MOCK data for message count comparison");
+    return {
+      withSummary: 7,
+      withoutSummary: 22
+    };
+  },
+
+  /**
+   * Mock data for summarization feedback
+   */
+  getSummarizationFeedbackMock(): SummarizationFeedback {
+    console.log("⚠️ Using MOCK data for feedback statistics");
+    return {
+      positive: 70,
+      neutral: 18,
+      negative: 12
+    };
+  },
+
+  /**
+   * Mock data for summarization impact
+   */
+  getSummarizationImpactMock(): SummarizationImpact {
+    console.log("⚠️ Using MOCK data for impact metrics");
+    return {
+      conversationTime: -32, // 32% reduction in time
+      messagesCount: -28,    // 28% reduction in messages
+      userSatisfaction: 18,  // 18% increase in satisfaction
+      taskCompletion: 15     // 15% increase in task completion
+    };
   }
 };
 
