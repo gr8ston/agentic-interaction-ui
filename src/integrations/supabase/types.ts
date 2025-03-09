@@ -83,7 +83,7 @@ export type Database = {
           message_id: string
           role: string | null
           sequence_number: number
-          tokens_consumed: number | null
+          tokens_consumed: Json | null
           user_id: string | null
           was_summarized: boolean | null
         }
@@ -98,7 +98,7 @@ export type Database = {
           message_id?: string
           role?: string | null
           sequence_number: number
-          tokens_consumed?: number | null
+          tokens_consumed?: Json | null
           user_id?: string | null
           was_summarized?: boolean | null
         }
@@ -113,7 +113,7 @@ export type Database = {
           message_id?: string
           role?: string | null
           sequence_number?: number
-          tokens_consumed?: number | null
+          tokens_consumed?: Json | null
           user_id?: string | null
           was_summarized?: boolean | null
         }
@@ -126,6 +126,27 @@ export type Database = {
             referencedColumns: ["conversation_id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

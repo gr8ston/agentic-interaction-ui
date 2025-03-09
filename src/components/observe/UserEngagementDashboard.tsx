@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, subDays, subWeeks, subMonths } from "date-fns";
 import { Calendar as CalendarIcon, Filter, Users, Clock, Users2 } from "lucide-react";
 import {
   Table,
@@ -122,6 +122,41 @@ export function UserEngagementDashboard({ onConversationSelect }: UserEngagement
     setSelectedApp(null);
   };
 
+  const getDateRangeText = () => {
+    switch (dateRange) {
+      case "week":
+        return "Last Week";
+      case "month":
+        return "Last Month";
+      case "quarter":
+        return "Last Quarter";
+      case "year":
+        return "Last Year";
+      default:
+        return "Last Month";
+    }
+  };
+
+  const setDateRangeAndDate = (range: "week" | "month" | "quarter" | "year") => {
+    setDateRange(range);
+    const today = new Date();
+    
+    switch (range) {
+      case "week":
+        setDate(subWeeks(today, 1));
+        break;
+      case "month":
+        setDate(subMonths(today, 1));
+        break;
+      case "quarter":
+        setDate(subMonths(today, 3));
+        break;
+      case "year":
+        setDate(subMonths(today, 12));
+        break;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter and View Controls */}
@@ -134,7 +169,7 @@ export function UserEngagementDashboard({ onConversationSelect }: UserEngagement
                 {date ? format(date, "PPP") : "Pick a date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={date}
@@ -148,37 +183,35 @@ export function UserEngagementDashboard({ onConversationSelect }: UserEngagement
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex gap-2">
                 <Filter className="h-4 w-4" />
-                {dateRange === "week" ? "Last Week" : 
-                 dateRange === "month" ? "Last Month" : 
-                 dateRange === "quarter" ? "Last Quarter" : "Last Year"}
+                {getDateRangeText()}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
               <div className="p-2">
                 <Button 
                   variant={dateRange === "week" ? "default" : "ghost"} 
-                  onClick={() => setDateRange("week")}
+                  onClick={() => setDateRangeAndDate("week")}
                   className="w-full justify-start mb-1"
                 >
                   Last Week
                 </Button>
                 <Button 
                   variant={dateRange === "month" ? "default" : "ghost"} 
-                  onClick={() => setDateRange("month")}
+                  onClick={() => setDateRangeAndDate("month")}
                   className="w-full justify-start mb-1"
                 >
                   Last Month
                 </Button>
                 <Button 
                   variant={dateRange === "quarter" ? "default" : "ghost"} 
-                  onClick={() => setDateRange("quarter")}
+                  onClick={() => setDateRangeAndDate("quarter")}
                   className="w-full justify-start mb-1"
                 >
                   Last Quarter
                 </Button>
                 <Button 
                   variant={dateRange === "year" ? "default" : "ghost"} 
-                  onClick={() => setDateRange("year")}
+                  onClick={() => setDateRangeAndDate("year")}
                   className="w-full justify-start"
                 >
                   Last Year
