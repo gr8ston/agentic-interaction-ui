@@ -28,38 +28,43 @@ export function useDashboardData() {
     try {
       console.log("Fetching app usage distribution from Supabase");
       // Query conversations grouped by app_name
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
       const { data, error } = await supabase
         .from('conversations')
-        .select('app_name, count')
-        .select(`
-          app_name, 
-          count(*) as count
-        `)
-        .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .group('app_name');
+        .select('app_name')
+        .gte('created_at', sevenDaysAgo.toISOString())
+        .then(result => {
+          if (result.error) throw result.error;
+          
+          // Process the results to count by app_name
+          const appCounts: Record<string, number> = {};
+          if (result.data) {
+            result.data.forEach(item => {
+              const appName = item.app_name || 'unknown';
+              appCounts[appName] = (appCounts[appName] || 0) + 1;
+            });
+          }
+          
+          // Convert to the expected format
+          const formattedData: ExtendedAppUsageMetric[] = Object.entries(appCounts).map(([name, value]) => ({
+            name,
+            value,
+            percentage: 0 // Will calculate after summing
+          }));
+          
+          // Calculate percentage for each app
+          const totalConversations = formattedData.reduce((sum, app) => sum + app.value, 0);
+          return {
+            data: formattedData.map(app => ({
+              ...app,
+              percentage: totalConversations > 0 ? (app.value / totalConversations) * 100 : 0
+            }))
+          };
+        });
 
-      if (error) {
-        console.error("Error fetching app usage distribution:", error);
-        throw error;
-      }
-
-      // Transform data into the format expected by the chart
-      if (data && data.length > 0) {
-        const formattedData = data.map(item => ({
-          name: item.app_name,
-          value: parseInt(item.count)
-        }));
-
-        // Calculate percentage for each app
-        const totalConversations = formattedData.reduce((sum, app) => sum + app.value, 0);
-        
-        return formattedData.map(app => ({
-          ...app,
-          percentage: totalConversations > 0 ? (app.value / totalConversations) * 100 : 0
-        }));
-      }
-      
-      return [];
+      return data || [];
     } catch (error) {
       console.error("Error in getAppUsageDistribution:", error);
       return [];
