@@ -15,7 +15,7 @@ export function ConversationDetailsFooter({
     <DialogFooter>
       <div className="w-full flex justify-between items-center">
         <div className="text-sm text-gray-500">
-          {messageCount} messages
+          {messageCount} {messageCount === 1 ? 'message' : 'messages'}
         </div>
         <Button variant="outline" onClick={onClose}>Close</Button>
       </div>

@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RecentConversation } from "@/services/supabase-service";
 
@@ -41,13 +40,12 @@ export function RecentConversationsTable({
               <TableHead>Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tokens</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={5}>
                   <div className="flex justify-center py-4">
                     <div className="animate-pulse flex space-x-4">
                       <div className="flex-1 space-y-4 py-1">
@@ -65,7 +63,12 @@ export function RecentConversationsTable({
               conversations.map((conversation) => (
                 <TableRow key={conversation.id}>
                   <TableCell className="font-mono text-xs">
-                    {conversation.id.substring(0, 8)}...
+                    <span 
+                      className="text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => onViewConversation(conversation.id)}
+                    >
+                      {conversation.id.substring(0, 8)}...
+                    </span>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{conversation.app}</Badge>
@@ -75,20 +78,11 @@ export function RecentConversationsTable({
                     <Badge variant="secondary">{conversation.status}</Badge>
                   </TableCell>
                   <TableCell>{formatTokens(conversation.tokens)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => onViewConversation(conversation.id)}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                   No conversations found
                 </TableCell>
               </TableRow>
