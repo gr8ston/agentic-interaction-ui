@@ -7,14 +7,33 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+/.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
 *.local
+/out/
+/build
+.next/
+
+# Testing
+/coverage
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -22,3 +41,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cache
+.eslintcache
+.cache/
+tsconfig.tsbuildinfo
+
+# Debug
+.npm
+.yarn-integrity
+
+# Misc
+.vercel
+.turbo
+.firebase
+firebase-debug.log
+ui-debug.log
