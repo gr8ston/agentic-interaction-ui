@@ -1,9 +1,15 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// For Vite applications, environment variables should be accessed using import.meta.env
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Create a fallback client for development if environment variables aren't set
+export const supabase = createClient(
+  supabaseUrl || 'https://qijceioeubmccdmissne.supabase.co',
+  supabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpamNlaW9ldWJtY2NkbWlzc25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0NjQ2MjEsImV4cCI6MjA1NzA0MDYyMX0.8a_61geHU6blwMIQ092MHB_tOovO0dDFl-Hi9hE2zsI'
+);
 
 export interface AppUsageMetric {
   name: string;
