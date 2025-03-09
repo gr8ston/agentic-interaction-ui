@@ -30,16 +30,18 @@ export function AppUsageChart({ data }: AppUsageChartProps) {
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${Math.round(percent * 100)}%`}
               >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value, name) => [
-                `${value} conversations (${data.find(item => item.name === name)?.percentage || 0}%)`, 
-                name
-              ]} />
+              <Tooltip 
+                formatter={(value, name) => [
+                  `${value} conversations (${Math.round(data.find(item => item.name === name)?.percentage || 0)}%)`, 
+                  name
+                ]} 
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

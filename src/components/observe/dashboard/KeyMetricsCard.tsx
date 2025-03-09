@@ -19,6 +19,9 @@ export function KeyMetricsCard({
   suffix = '', 
   description = 'vs previous period' 
 }: KeyMetricsCardProps) {
+  // Round the percentage to a whole number
+  const roundedPercentage = Math.round(changePercentage);
+  
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -33,12 +36,12 @@ export function KeyMetricsCard({
             {changePercentage > 0 ? (
               <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
                 <ArrowUp className="h-3 w-3 mr-1" />
-                {Math.abs(changePercentage)}%
+                {Math.abs(roundedPercentage)}%
               </Badge>
             ) : changePercentage < 0 ? (
               <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
                 <ArrowDown className="h-3 w-3 mr-1" />
-                {Math.abs(changePercentage)}%
+                {Math.abs(roundedPercentage)}%
               </Badge>
             ) : (
               <Badge variant="outline">0%</Badge>

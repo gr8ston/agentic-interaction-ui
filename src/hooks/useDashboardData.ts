@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabaseService, ConversationMetrics, DailyMetric, RecentConversation } from "@/services/supabase-service";
+import { supabase } from "@/integrations/supabase/client";
+import { ConversationMetrics, DailyMetric, RecentConversation, AppUsageMetric } from "@/integrations/supabase/client";
 import { ExtendedAppUsageMetric } from "@/types/api";
 
 export function useDashboardData() {
@@ -22,6 +23,48 @@ export function useDashboardData() {
   const [conversationTrends, setConversationTrends] = useState<DailyMetric[]>([]);
   const [appUsage, setAppUsage] = useState<ExtendedAppUsageMetric[]>([]);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
+
+  const getAppUsageDistribution = async (): Promise<ExtendedAppUsageMetric[]> => {
+    try {
+      console.log("Fetching app usage distribution from Supabase");
+      // Query conversations grouped by app_name
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('app_name, count')
+        .select(`
+          app_name, 
+          count(*) as count
+        `)
+        .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .group('app_name');
+
+      if (error) {
+        console.error("Error fetching app usage distribution:", error);
+        throw error;
+      }
+
+      // Transform data into the format expected by the chart
+      if (data && data.length > 0) {
+        const formattedData = data.map(item => ({
+          name: item.app_name,
+          value: parseInt(item.count)
+        }));
+
+        // Calculate percentage for each app
+        const totalConversations = formattedData.reduce((sum, app) => sum + app.value, 0);
+        
+        return formattedData.map(app => ({
+          ...app,
+          percentage: totalConversations > 0 ? (app.value / totalConversations) * 100 : 0
+        }));
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Error in getAppUsageDistribution:", error);
+      return [];
+    }
+  };
   
   const fetchData = async () => {
     console.log("DASHBOARD: fetchData started");
@@ -33,12 +76,258 @@ export function useDashboardData() {
     try {
       // Fetch all data in parallel
       console.log("DASHBOARD: Starting Promise.allSettled for data fetching");
+      
+      // Replace the supabaseService with direct supabase queries
+      const getOverviewMetrics = async (): Promise<ConversationMetrics> => {
+        try {
+          // Get current period data
+          const currentEnd = new Date();
+          const currentStart = new Date(currentEnd);
+          currentStart.setDate(currentStart.getDate() - 7);
+          
+          // Get previous period data
+          const previousEnd = new Date(currentStart);
+          const previousStart = new Date(previousEnd);
+          previousStart.setDate(previousStart.getDate() - 7);
+          
+          // Fetch current period conversations
+          const { data: currentConversations, error: currentConversationsError } = await supabase
+            .from('conversations')
+            .select('conversation_id')
+            .gte('created_at', currentStart.toISOString())
+            .lte('created_at', currentEnd.toISOString());
+            
+          if (currentConversationsError) throw currentConversationsError;
+          
+          // Fetch previous period conversations
+          const { data: previousConversations, error: previousConversationsError } = await supabase
+            .from('conversations')
+            .select('conversation_id')
+            .gte('created_at', previousStart.toISOString())
+            .lt('created_at', currentStart.toISOString());
+            
+          if (previousConversationsError) throw previousConversationsError;
+          
+          // Fetch current period messages
+          const { data: currentMessages, error: currentMessagesError } = await supabase
+            .from('messages')
+            .select('message_id, latency_ms, tokens_consumed')
+            .gte('created_at', currentStart.toISOString())
+            .lte('created_at', currentEnd.toISOString());
+            
+          if (currentMessagesError) throw currentMessagesError;
+          
+          // Fetch previous period messages
+          const { data: previousMessages, error: previousMessagesError } = await supabase
+            .from('messages')
+            .select('message_id, latency_ms, tokens_consumed')
+            .gte('created_at', previousStart.toISOString())
+            .lt('created_at', currentStart.toISOString());
+            
+          if (previousMessagesError) throw previousMessagesError;
+          
+          // Calculate metrics
+          const totalCurrentConversations = currentConversations ? currentConversations.length : 0;
+          const totalPreviousConversations = previousConversations ? previousConversations.length : 0;
+          
+          const totalCurrentMessages = currentMessages ? currentMessages.length : 0;
+          const totalPreviousMessages = previousMessages ? previousMessages.length : 0;
+          
+          // Calculate average latency
+          let totalCurrentLatency = 0;
+          let validCurrentLatencyCount = 0;
+          
+          let totalPreviousLatency = 0;
+          let validPreviousLatencyCount = 0;
+          
+          // Calculate total tokens
+          let totalCurrentTokens = 0;
+          let totalPreviousTokens = 0;
+          
+          if (currentMessages) {
+            currentMessages.forEach(msg => {
+              if (msg.latency_ms) {
+                totalCurrentLatency += msg.latency_ms;
+                validCurrentLatencyCount++;
+              }
+              
+              if (msg.tokens_consumed) {
+                const tokens = getTotalTokens(msg.tokens_consumed);
+                totalCurrentTokens += tokens;
+              }
+            });
+          }
+          
+          if (previousMessages) {
+            previousMessages.forEach(msg => {
+              if (msg.latency_ms) {
+                totalPreviousLatency += msg.latency_ms;
+                validPreviousLatencyCount++;
+              }
+              
+              if (msg.tokens_consumed) {
+                const tokens = getTotalTokens(msg.tokens_consumed);
+                totalPreviousTokens += tokens;
+              }
+            });
+          }
+          
+          const averageCurrentLatency = validCurrentLatencyCount > 0 ? totalCurrentLatency / validCurrentLatencyCount : 0;
+          const averagePreviousLatency = validPreviousLatencyCount > 0 ? totalPreviousLatency / validPreviousLatencyCount : 0;
+          
+          // Calculate percentage changes
+          const conversationsChange = totalPreviousConversations > 0 
+            ? ((totalCurrentConversations - totalPreviousConversations) / totalPreviousConversations) * 100 
+            : 0;
+            
+          const messagesChange = totalPreviousMessages > 0 
+            ? ((totalCurrentMessages - totalPreviousMessages) / totalPreviousMessages) * 100 
+            : 0;
+            
+          const latencyChange = averagePreviousLatency > 0 
+            ? ((averageCurrentLatency - averagePreviousLatency) / averagePreviousLatency) * 100 
+            : 0;
+            
+          const tokensChange = totalPreviousTokens > 0 
+            ? ((totalCurrentTokens - totalPreviousTokens) / totalPreviousTokens) * 100 
+            : 0;
+          
+          return {
+            totalConversations: totalCurrentConversations,
+            totalMessages: totalCurrentMessages,
+            averageLatency: averageCurrentLatency,
+            totalTokensConsumed: totalCurrentTokens,
+            conversationsChange,
+            messagesChange,
+            latencyChange,
+            tokensChange
+          };
+        } catch (error) {
+          console.error("Error in getOverviewMetrics:", error);
+          throw error;
+        }
+      };
+      
+      const getConversationTrends = async (): Promise<DailyMetric[]> => {
+        try {
+          const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const today = new Date();
+          const result: DailyMetric[] = [];
+          
+          // Create array for past 7 days
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dayName = daysOfWeek[date.getDay()];
+            
+            // Calculate start and end of the day
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            // Query conversations created on this day
+            const { data, error } = await supabase
+              .from('conversations')
+              .select('conversation_id')
+              .gte('created_at', startOfDay.toISOString())
+              .lte('created_at', endOfDay.toISOString());
+            
+            if (error) throw error;
+            
+            result.push({
+              date: dayName,
+              value: data ? data.length : 0
+            });
+          }
+          
+          return result;
+        } catch (error) {
+          console.error("Error in getConversationTrends:", error);
+          throw error;
+        }
+      };
+      
+      const getRecentConversations = async (): Promise<RecentConversation[]> => {
+        try {
+          const { data, error } = await supabase
+            .from('conversations')
+            .select(`
+              conversation_id,
+              app_name,
+              created_at,
+              metadata
+            `)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          
+          if (error) throw error;
+          
+          if (!data) return [];
+          
+          const conversationIds = data.map(conv => conv.conversation_id);
+          
+          // Get message counts and token sums for each conversation
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('messages')
+            .select('conversation_id, tokens_consumed')
+            .in('conversation_id', conversationIds);
+          
+          if (messagesError) throw messagesError;
+          
+          return data.map(conv => {
+            // Get messages for this conversation
+            const conversationMessages = messagesData ? 
+              messagesData.filter(msg => msg.conversation_id === conv.conversation_id) : 
+              [];
+            
+            // Calculate total tokens
+            let totalTokens = 0;
+            conversationMessages.forEach(msg => {
+              if (msg.tokens_consumed) {
+                totalTokens += getTotalTokens(msg.tokens_consumed);
+              }
+            });
+            
+            // Format the time
+            const createdAt = new Date(conv.created_at);
+            const now = new Date();
+            const diffMs = now.getTime() - createdAt.getTime();
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            let timeAgo;
+            if (diffMins < 60) {
+              timeAgo = `${diffMins} ${diffMins === 1 ? 'min' : 'mins'} ago`;
+            } else if (diffHours < 24) {
+              timeAgo = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+            } else {
+              timeAgo = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+            }
+            
+            return {
+              id: conv.conversation_id,
+              app: conv.app_name,
+              time: timeAgo,
+              status: 'Completed', // Assuming all conversations are completed
+              tokens: totalTokens
+            };
+          });
+        } catch (error) {
+          console.error("Error in getRecentConversations:", error);
+          throw error;
+        }
+      };
+      
       const results = await Promise.allSettled([
-        supabaseService.getOverviewMetrics(),
-        supabaseService.getConversationTrends(),
-        supabaseService.getAppUsageDistribution(),
-        supabaseService.getRecentConversations()
+        getOverviewMetrics(),
+        getConversationTrends(),
+        getAppUsageDistribution(),
+        getRecentConversations()
       ]);
+      
       console.log("DASHBOARD: All promises settled:", results);
       
       // Process results, using fallbacks if any requests failed
@@ -81,24 +370,15 @@ export function useDashboardData() {
       
       if (results[2].status === 'fulfilled') {
         console.log("App usage data received:", results[2].value);
-        // Add percentage property to app usage data
-        const appUsageData = results[2].value;
-        const totalApps = appUsageData.reduce((sum, app) => sum + app.value, 0);
-        
-        const enhancedAppUsage = appUsageData.map(app => ({
-          ...app,
-          percentage: totalApps > 0 ? Math.round((app.value / totalApps) * 100) : 0
-        }));
-        
-        setAppUsage(enhancedAppUsage);
+        setAppUsage(results[2].value);
       } else {
         console.error("Error fetching app usage:", results[2].reason);
         setAppUsage([
-          { name: 'weather_app', value: 2, percentage: 20 },
-          { name: 'travel_planner', value: 2, percentage: 20 },
-          { name: 'recipe_finder', value: 2, percentage: 20 },
-          { name: 'workout_planner', value: 2, percentage: 20 },
-          { name: 'shopping_assistant', value: 2, percentage: 20 }
+          { name: 'travel_planner', value: 90, percentage: 64 },
+          { name: 'weather_app', value: 23, percentage: 16 },
+          { name: 'shopping_assistant', value: 23, percentage: 16 },
+          { name: 'summarization_test_app', value: 1, percentage: 1 },
+          { name: 'auto_conversation_test_app', value: 4, percentage: 3 }
         ]);
         setHasError(true);
       }
@@ -152,4 +432,45 @@ export function useDashboardData() {
     recentConversations,
     fetchData
   };
+}
+
+// This function is from client.ts, but referenced here directly for the hook to work
+function getTotalTokens(tokensObj: unknown): number {
+  if (!tokensObj) return 0;
+  
+  try {
+    // Handle different potential formats
+    if (typeof tokensObj === 'number') {
+      return Number(tokensObj);
+    }
+    
+    if (typeof tokensObj === 'string') {
+      return Number(tokensObj);
+    }
+    
+    // If it's an object with prompt_tokens and completion_tokens
+    if (typeof tokensObj === 'object' && tokensObj !== null) {
+      const obj = tokensObj as Record<string, unknown>;
+      let total = 0;
+      
+      if ('prompt_tokens' in obj && typeof obj.prompt_tokens === 'number') {
+        total += Number(obj.prompt_tokens);
+      }
+      
+      if ('completion_tokens' in obj && typeof obj.completion_tokens === 'number') {
+        total += Number(obj.completion_tokens);
+      }
+      
+      if ('total_tokens' in obj && typeof obj.total_tokens === 'number') {
+        return Number(obj.total_tokens);
+      }
+      
+      return total;
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error calculating tokens:', error);
+    return 0;
+  }
 }
