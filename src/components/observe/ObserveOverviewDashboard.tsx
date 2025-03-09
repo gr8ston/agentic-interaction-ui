@@ -68,16 +68,16 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
         />
         
         <KeyMetricsCard 
-          title="Average Response Time" 
+          title="Avg. Response Time" 
           value={metrics.averageLatency.toFixed(0)} 
           suffix="ms"
           changePercentage={metrics.latencyChange} 
         />
         
         <KeyMetricsCard 
-          title="Tokens Consumed" 
+          title="Token Usage (Total)" 
           value={metrics.totalTokensConsumed >= 1000 
-            ? (metrics.totalTokensConsumed / 1000).toFixed(1) + 'k' 
+            ? (metrics.totalTokensConsumed / 1000).toFixed(1) + 'K' 
             : metrics.totalTokensConsumed} 
           changePercentage={metrics.tokensChange} 
         />
