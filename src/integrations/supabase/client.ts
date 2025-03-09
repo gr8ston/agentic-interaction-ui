@@ -30,34 +30,34 @@ export const getTotalTokens = (tokenValue: unknown): number => {
     const tokenObj = tokenValue as Record<string, unknown>;
     
     if ('prompt_tokens' in tokenObj && 'completion_tokens' in tokenObj) {
-      const promptTokens = typeof tokenObj.prompt_tokens === 'number' 
+      const promptTokens = Number(typeof tokenObj.prompt_tokens === 'number' 
         ? tokenObj.prompt_tokens 
-        : Number(tokenObj.prompt_tokens || 0);
+        : Number(tokenObj.prompt_tokens || 0));
       
-      const completionTokens = typeof tokenObj.completion_tokens === 'number' 
+      const completionTokens = Number(typeof tokenObj.completion_tokens === 'number' 
         ? tokenObj.completion_tokens 
-        : Number(tokenObj.completion_tokens || 0);
+        : Number(tokenObj.completion_tokens || 0));
         
-      return Number(promptTokens) + Number(completionTokens);
+      return promptTokens + completionTokens;
     }
     // Check for standard format with input and output fields
     else if ('input' in tokenObj && 'output' in tokenObj) {
-      const inputTokens = typeof tokenObj.input === 'number' 
+      const inputTokens = Number(typeof tokenObj.input === 'number' 
         ? tokenObj.input 
-        : Number(tokenObj.input || 0);
+        : Number(tokenObj.input || 0));
         
-      const outputTokens = typeof tokenObj.output === 'number' 
+      const outputTokens = Number(typeof tokenObj.output === 'number' 
         ? tokenObj.output 
-        : Number(tokenObj.output || 0);
+        : Number(tokenObj.output || 0));
         
-      return Number(inputTokens) + Number(outputTokens);
+      return inputTokens + outputTokens;
     }
     // Sum up all numeric values in the object
     else {
       return Object.values(tokenObj).reduce((sum: number, val: unknown) => {
         // Ensure we convert each value to a number and handle NaN
         const numVal = typeof val === 'number' ? val : Number(val || 0);
-        return sum + (isNaN(numVal) ? 0 : Number(numVal));
+        return sum + (isNaN(numVal) ? 0 : numVal);
       }, 0);
     }
   } 
