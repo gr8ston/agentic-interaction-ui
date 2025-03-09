@@ -18,6 +18,33 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
+// Helper function to safely convert token values from various formats
+export const getTotalTokens = (tokenValue: any): number => {
+  // If it's null/undefined, return 0
+  if (tokenValue === null || tokenValue === undefined) {
+    return 0;
+  }
+  
+  if (typeof tokenValue === 'object') {
+    // Check for OpenAI format with prompt_tokens and completion_tokens
+    if ('prompt_tokens' in tokenValue && 'completion_tokens' in tokenValue) {
+      return Number(tokenValue.prompt_tokens || 0) + Number(tokenValue.completion_tokens || 0);
+    }
+    // Check for standard format with input and output fields
+    else if ('input' in tokenValue && 'output' in tokenValue) {
+      return Number(tokenValue.input || 0) + Number(tokenValue.output || 0);
+    }
+    // Sum up all numeric values in the object
+    else {
+      return Object.values(tokenValue).reduce((sum, val) => 
+        sum + (typeof val === 'number' ? val : (typeof val === 'string' ? Number(val) || 0 : 0)), 0);
+    }
+  } 
+  
+  // If it's a primitive value, convert to number
+  return typeof tokenValue === 'number' ? tokenValue : (Number(tokenValue) || 0);
+};
+
 // Log connection status
 (async () => {
   try {

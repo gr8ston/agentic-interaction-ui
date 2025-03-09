@@ -21,15 +21,15 @@ const formatMessage = (message: any): ConversationMessage => {
   if (message.tokens_consumed && typeof message.tokens_consumed === 'object') {
     // Check for OpenAI format with prompt_tokens and completion_tokens
     if ('prompt_tokens' in message.tokens_consumed && 'completion_tokens' in message.tokens_consumed) {
-      inputTokens = message.tokens_consumed.prompt_tokens || 0;
-      outputTokens = message.tokens_consumed.completion_tokens || 0;
+      inputTokens = Number(message.tokens_consumed.prompt_tokens) || 0;
+      outputTokens = Number(message.tokens_consumed.completion_tokens) || 0;
       
       console.log(`Extracted tokens from OpenAI format: input=${inputTokens}, output=${outputTokens}`);
     }
     // Check for our standard format with input and output fields
     else if ('input' in message.tokens_consumed && 'output' in message.tokens_consumed) {
-      inputTokens = message.tokens_consumed.input || 0;
-      outputTokens = message.tokens_consumed.output || 0;
+      inputTokens = Number(message.tokens_consumed.input) || 0;
+      outputTokens = Number(message.tokens_consumed.output) || 0;
       
       console.log(`Extracted tokens from standard format: input=${inputTokens}, output=${outputTokens}`);
     }
@@ -51,11 +51,11 @@ const formatMessage = (message: any): ConversationMessage => {
   } else if (message.tokens_consumed && typeof message.tokens_consumed === 'number') {
     // Old integer format - split based on role
     if (message.role === 'system' || message.role === 'agent') {
-      inputTokens = Math.floor(message.tokens_consumed * 0.33);
-      outputTokens = Math.floor(message.tokens_consumed * 0.67);
+      inputTokens = Math.floor(Number(message.tokens_consumed) * 0.33);
+      outputTokens = Math.floor(Number(message.tokens_consumed) * 0.67);
       console.log(`Split integer tokens (${message.tokens_consumed}): input=${inputTokens}, output=${outputTokens}`);
     } else {
-      inputTokens = message.tokens_consumed;
+      inputTokens = Number(message.tokens_consumed);
       outputTokens = 0;
       console.log(`Integer tokens for user: input=${inputTokens}, output=${outputTokens}`);
     }
@@ -68,7 +68,7 @@ const formatMessage = (message: any): ConversationMessage => {
     timestamp: message.created_at,
     // Only include metrics for system/agent messages
     metrics: hasMetrics ? {
-      latency: message.latency_ms ? message.latency_ms / 1000 : 0, // Convert ms to seconds
+      latency: message.latency_ms ? Number(message.latency_ms) / 1000 : 0, // Convert ms to seconds
       tokens: {
         input: inputTokens,
         output: outputTokens
@@ -191,7 +191,7 @@ export function ConversationDetailsModal({
           </Button>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4 my-4 h-[50vh]">
+        <ScrollArea className="flex-1 pr-4 my-4 h-[50vh] max-h-[50vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />

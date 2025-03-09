@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { supabaseService, ConversationMetrics, DailyMetric, AppUsageMetric, RecentConversation } from "@/services/supabase-service";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTotalTokens } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
@@ -38,23 +38,6 @@ interface ConversationDetails {
 
 interface ObserveOverviewDashboardProps {
   onConversationSelect?: (conversationId: string) => void;
-}
-
-// Add this helper function near the top of the file, before the component definition
-// Helper function to calculate total tokens from a token value
-function getTotalTokens(tokenValue: any, role?: string): number {
-  // If it's a user message or tokens are null/undefined, return 0
-  if (tokenValue === null || tokenValue === undefined || role === 'user') {
-    return 0;
-  }
-  
-  if (typeof tokenValue === 'object') {
-    // New format: JSON object with input and output fields
-    return (tokenValue.input || 0) + (tokenValue.output || 0);
-  } else {
-    // Old format: integer value
-    return tokenValue || 0;
-  }
 }
 
 export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOverviewDashboardProps) {
@@ -115,8 +98,8 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
           content: msg.content,
           role: msg.role,
           created: new Date(msg.created_at || '').toLocaleString(),
-          latency: msg.latency_ms,
-          tokens: msg.tokens_consumed
+          latency: msg.latency_ms !== null ? Number(msg.latency_ms) : null,
+          tokens: msg.tokens_consumed !== null ? getTotalTokens(msg.tokens_consumed) : null
         }))
       };
       
@@ -418,7 +401,7 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
       }));
       
       // === CALCULATION HELPERS ===
-      const calculatePercentageChange = (current, previous) => {
+      const calculatePercentageChange = (current: number, previous: number) => {
         if (previous === 0) return 0;
         return ((current - previous) / previous) * 100;
       };
@@ -435,8 +418,8 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
       const msgChange = calculatePercentageChange(currentMsgCount, prevMsgCount);
       
       // Latency 
-      const currentLatencyValues = currentLatencyData?.map(item => item.latency_ms) || [];
-      const prevLatencyValues = prevLatencyData?.map(item => item.latency_ms) || [];
+      const currentLatencyValues = currentLatencyData?.map(item => Number(item.latency_ms || 0)) || [];
+      const prevLatencyValues = prevLatencyData?.map(item => Number(item.latency_ms || 0)) || [];
       
       const avgCurrentLatency = currentLatencyValues.length > 0 
         ? currentLatencyValues.reduce((sum, val) => sum + val, 0) / currentLatencyValues.length 
@@ -453,16 +436,11 @@ export function ObserveOverviewDashboard({ onConversationSelect }: ObserveOvervi
         : -Math.abs(latencyChangeRaw); // Slower (degradation)
       
       // Token Usage
-      const currentTokenValues = currentTokenData?.map(item => item.tokens_consumed) || [];
-      const prevTokenValues = prevTokenData?.map(item => item.tokens_consumed) || [];
-      
-      const totalCurrentTokens = currentTokenValues.length > 0 
-        ? currentTokenValues.reduce((sum, val) => sum + getTotalTokens(val), 0) 
-        : 0;
+      const totalCurrentTokens = currentTokenData ? 
+        currentTokenData.reduce((sum, item) => sum + getTotalTokens(item.tokens_consumed), 0) : 0;
         
-      const totalPrevTokens = prevTokenValues.length > 0 
-        ? prevTokenValues.reduce((sum, val) => sum + getTotalTokens(val), 0) 
-        : 0;
+      const totalPrevTokens = prevTokenData ? 
+        prevTokenData.reduce((sum, item) => sum + getTotalTokens(item.tokens_consumed), 0) : 0;
         
       const tokenChange = calculatePercentageChange(totalCurrentTokens, totalPrevTokens);
       
@@ -567,8 +545,8 @@ ${prevLatencyError ? `- Error: ${prevLatencyError.message}` : ''}
   AND latency_ms IS NOT NULL
 
 TOKEN USAGE:
-- Current period total: ${totalCurrentTokens.toFixed(2)} tokens (from ${currentTokenValues.length} data points)
-- Previous period total: ${totalPrevTokens.toFixed(2)} tokens (from ${prevTokenValues.length} data points)
+- Current period total: ${totalCurrentTokens.toFixed(2)} tokens (from ${currentTokenData?.length || 0} data points)
+- Previous period total: ${totalPrevTokens.toFixed(2)} tokens (from ${prevTokenData?.length || 0} data points)
 - Percentage change: ${tokenChange.toFixed(2)}%
 - Raw calculation: ((${totalCurrentTokens.toFixed(2)} - ${totalPrevTokens.toFixed(2)}) / ${totalPrevTokens.toFixed(2)}) * 100 = ${tokenChange.toFixed(2)}%
 ${currentTokenError ? `- Error: ${currentTokenError.message}` : ''}
@@ -749,390 +727,4 @@ TABLE DATA:
 
   // Format the tokens consumed for display
   const formatTokens = (tokens: number): string => {
-    if (tokens >= 1000000) {
-      return `${(tokens / 1000000).toFixed(1)}M`;
-    } else if (tokens >= 1000) {
-      return `${(tokens / 1000).toFixed(1)}K`;
-    } else {
-      return tokens.toString();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col space-y-4 h-full items-center justify-center">
-        <div className="animate-spin rounded-full border-t-4 border-brand-primary border-opacity-50 h-12 w-12"></div>
-        <p className="text-gray-500">Loading dashboard data...</p>
-      </div>
-    );
-  }
-
-  if (hasError && metrics.totalConversations === 0) {
-    return (
-      <div className="flex flex-col space-y-4 h-full items-center justify-center text-center p-8">
-        <div className="bg-red-100 p-4 rounded-lg">
-          <p className="text-red-600 font-medium">We encountered an error fetching the dashboard data.</p>
-          <p className="text-gray-600 mt-2">Please try refreshing the page. If the problem persists, there might be an issue with the database connection.</p>
-          <Button onClick={handleRefresh} className="mt-4">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Data
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-muted-foreground">
-            Last updated: {lastRefresh.toLocaleTimeString()}
-          </div>
-          <Button onClick={handleRefresh} size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button onClick={runDebugQueries} variant="outline" size="sm">
-            <Bug className="mr-2 h-4 w-4" />
-            Debug Data
-          </Button>
-          <Button onClick={seedDemoData} variant="outline" size="sm">
-            <Database className="mr-2 h-4 w-4" />
-            Seed Demo Data
-          </Button>
-        </div>
-      </div>
-      
-      {/* Display debug info if available */}
-      {debugInfo && (
-        <Card className="mb-4 border-dashed border-yellow-500">
-          <CardHeader className="py-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <Bug className="mr-2 h-4 w-4" />
-              Database Debug Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-60 bg-muted p-2 rounded-md">
-              {debugInfo}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Display seeding status if available */}
-      {seedingStatus && (
-        <Card className="mb-4 border-dashed border-green-500">
-          <CardHeader className="py-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <Database className="mr-2 h-4 w-4" />
-              Database Seeding Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-60 bg-muted p-2 rounded-md">
-              {seedingStatus}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Conversations</CardDescription>
-            <CardTitle className="text-2xl">
-              {metrics.totalConversations > 0 
-                ? metrics.totalConversations.toLocaleString() 
-                : <span className="text-gray-400">-</span>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.conversationsChange !== 0 ? (
-              <div className={`flex items-center space-x-2 ${metrics.conversationsChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.conversationsChange > 0 ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-                <span className="text-sm font-medium">
-                  {Math.abs(metrics.conversationsChange).toFixed(1)}% {metrics.conversationsChange > 0 ? 'increase' : 'decrease'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-400">
-                <span className="text-sm font-medium">No change</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Messages</CardDescription>
-            <CardTitle className="text-2xl">
-              {metrics.totalMessages > 0 
-                ? metrics.totalMessages.toLocaleString() 
-                : <span className="text-gray-400">-</span>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.messagesChange !== 0 ? (
-              <div className={`flex items-center space-x-2 ${metrics.messagesChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.messagesChange > 0 ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-                <span className="text-sm font-medium">
-                  {Math.abs(metrics.messagesChange).toFixed(1)}% {metrics.messagesChange > 0 ? 'increase' : 'decrease'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-400">
-                <span className="text-sm font-medium">No change</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Avg. Response Time</CardDescription>
-            <CardTitle className="text-2xl">
-              {metrics.averageLatency > 0 
-                ? `${metrics.averageLatency.toFixed(0)}ms` 
-                : <span className="text-gray-400">-</span>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.latencyChange !== 0 ? (
-              <div className={`flex items-center space-x-2 ${metrics.latencyChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.latencyChange > 0 ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-                <span className="text-sm font-medium">
-                  {Math.abs(metrics.latencyChange).toFixed(1)}% {metrics.latencyChange > 0 ? 'faster' : 'slower'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-400">
-                <span className="text-sm font-medium">No change</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Token Usage (Total)</CardDescription>
-            <CardTitle className="text-2xl">
-              {metrics.totalTokensConsumed > 0 
-                ? formatTokens(metrics.totalTokensConsumed) 
-                : <span className="text-gray-400">-</span>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.tokensChange !== 0 ? (
-              <div className={`flex items-center space-x-2 ${metrics.tokensChange > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {metrics.tokensChange > 0 ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-                <span className="text-sm font-medium">
-                  {Math.abs(metrics.tokensChange).toFixed(1)}% {metrics.tokensChange > 0 ? 'increase' : 'decrease'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-400">
-                <span className="text-sm font-medium">No change</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Conversation Trends</CardTitle>
-            <CardDescription>Volume over the past week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              {conversationTrends.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-full w-full">
-                  <LineChart
-                    data={conversationTrends}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="var(--color-value)" 
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ChartContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">No conversation trend data available</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">App Usage Distribution</CardTitle>
-            <CardDescription>Conversations by application</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              {appUsage.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={appUsage}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {appUsage.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">No app usage data available</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Recent Conversations</CardTitle>
-          <CardDescription>Latest interactions across applications</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Application</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tokens</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentConversations.map((conversation) => (
-                  <TableRow key={conversation.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleConversationClick(conversation.id)}>
-                    <TableCell className="font-mono text-xs text-blue-600 hover:underline">
-                      {conversation.id.slice(0, 8)}...
-                    </TableCell>
-                    <TableCell>{conversation.app}</TableCell>
-                    <TableCell>{conversation.time}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        {conversation.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{conversation.tokens}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Conversation Details Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Conversation Details</span>
-              <DialogClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-4 w-4" />
-                </Button>
-              </DialogClose>
-            </DialogTitle>
-            {selectedConversation && (
-              <DialogDescription>
-                <div className="grid grid-cols-2 gap-4 mt-2 mb-4">
-                  <div>
-                    <span className="text-muted-foreground">ID:</span> 
-                    <span className="font-mono text-xs ml-2">{selectedConversation.conversationId}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Application:</span> 
-                    <span className="ml-2">{selectedConversation.app}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Created:</span> 
-                    <span className="ml-2">{selectedConversation.created}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Messages:</span> 
-                    <span className="ml-2">{selectedConversation.messages.length}</span>
-                  </div>
-                </div>
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          
-          {isLoadingConversation ? (
-            <div className="flex items-center justify-center p-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : selectedConversation ? (
-            <div className="space-y-4">
-              {selectedConversation.messages.map((message, index) => (
-                <div key={message.id} className={`p-4 rounded-lg ${message.role === 'user' ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold">{message.role === 'user' ? 'User' : 'System'}</div>
-                    <div className="text-xs text-muted-foreground">{message.created}</div>
-                  </div>
-                  <div className="text-sm">{message.content}</div>
-                  {message.role !== 'user' && (
-                    <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                      {message.latency !== null && <div>Latency: {message.latency}ms</div>}
-                      {message.tokens !== null && <div>Tokens: {message.tokens}</div>}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center p-6 text-muted-foreground">No conversation data available</div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+    if (tokens >=
