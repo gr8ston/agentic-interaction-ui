@@ -38,7 +38,7 @@ export const getTotalTokens = (tokenValue: unknown): number => {
         ? tokenObj.completion_tokens 
         : Number(tokenObj.completion_tokens || 0);
         
-      return promptTokens + completionTokens;
+      return Number(promptTokens) + Number(completionTokens);
     }
     // Check for standard format with input and output fields
     else if ('input' in tokenObj && 'output' in tokenObj) {
@@ -50,13 +50,14 @@ export const getTotalTokens = (tokenValue: unknown): number => {
         ? tokenObj.output 
         : Number(tokenObj.output || 0);
         
-      return inputTokens + outputTokens;
+      return Number(inputTokens) + Number(outputTokens);
     }
     // Sum up all numeric values in the object
     else {
       return Object.values(tokenObj).reduce((sum: number, val: unknown) => {
+        // Ensure we convert each value to a number and handle NaN
         const numVal = typeof val === 'number' ? val : Number(val || 0);
-        return sum + (isNaN(numVal) ? 0 : numVal);
+        return sum + (isNaN(numVal) ? 0 : Number(numVal));
       }, 0);
     }
   } 

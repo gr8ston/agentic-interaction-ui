@@ -18,48 +18,39 @@ const formatMessage = (message: any): ConversationMessage => {
   let inputTokens = 0;
   let outputTokens = 0;
   
-  if (message.tokens_consumed && typeof message.tokens_consumed === 'object') {
-    // Check for OpenAI format with prompt_tokens and completion_tokens
-    if ('prompt_tokens' in message.tokens_consumed && 'completion_tokens' in message.tokens_consumed) {
-      inputTokens = Number(message.tokens_consumed.prompt_tokens || 0);
-      outputTokens = Number(message.tokens_consumed.completion_tokens || 0);
+  if (message.tokens_consumed) {
+    // Use our improved getTotalTokens helper
+    const totalTokens = getTotalTokens(message.tokens_consumed);
+    
+    // Check for specific format with separate input/output fields
+    if (typeof message.tokens_consumed === 'object' && message.tokens_consumed !== null) {
+      const tokenObj = message.tokens_consumed as Record<string, unknown>;
       
-      console.log(`Extracted tokens from OpenAI format: input=${inputTokens}, output=${outputTokens}`);
-    }
-    // Check for our standard format with input and output fields
-    else if ('input' in message.tokens_consumed && 'output' in message.tokens_consumed) {
-      inputTokens = Number(message.tokens_consumed.input || 0);
-      outputTokens = Number(message.tokens_consumed.output || 0);
-      
-      console.log(`Extracted tokens from standard format: input=${inputTokens}, output=${outputTokens}`);
-    }
-    // If it's some other object format, try to extract whatever is available
-    else {
-      console.log(`Unknown token format: ${JSON.stringify(message.tokens_consumed)}`);
-      const totalTokens = getTotalTokens(message.tokens_consumed);
-      
-      // Split the total based on role (33% input, 67% output for AI messages)
+      if ('input' in tokenObj && 'output' in tokenObj) {
+        inputTokens = Number(tokenObj.input || 0);
+        outputTokens = Number(tokenObj.output || 0);
+      } else if ('prompt_tokens' in tokenObj && 'completion_tokens' in tokenObj) {
+        inputTokens = Number(tokenObj.prompt_tokens || 0);
+        outputTokens = Number(tokenObj.completion_tokens || 0);
+      } else {
+        // Split the total based on role (33% input, 67% output for AI messages)
+        if (message.role === 'system' || message.role === 'agent') {
+          inputTokens = Math.floor(totalTokens * 0.33);
+          outputTokens = Math.floor(totalTokens * 0.67);
+        } else {
+          inputTokens = totalTokens; // For user messages, all tokens are input
+          outputTokens = 0;
+        }
+      }
+    } else {
+      // For non-object token values, split based on role
       if (message.role === 'system' || message.role === 'agent') {
         inputTokens = Math.floor(totalTokens * 0.33);
         outputTokens = Math.floor(totalTokens * 0.67);
       } else {
-        inputTokens = totalTokens; // For user messages, all tokens are input
+        inputTokens = totalTokens;
         outputTokens = 0;
       }
-    }
-  } else if (message.tokens_consumed) {
-    // Handle non-object token values (like plain numbers)
-    const totalTokens = getTotalTokens(message.tokens_consumed);
-    
-    // Split based on role
-    if (message.role === 'system' || message.role === 'agent') {
-      inputTokens = Math.floor(totalTokens * 0.33);
-      outputTokens = Math.floor(totalTokens * 0.67);
-      console.log(`Split tokens (${totalTokens}): input=${inputTokens}, output=${outputTokens}`);
-    } else {
-      inputTokens = totalTokens;
-      outputTokens = 0;
-      console.log(`Tokens for user: input=${inputTokens}, output=${outputTokens}`);
     }
   }
   
@@ -107,7 +98,7 @@ export function ConversationDetailsModal({
     setError(null);
     
     // Set a timeout to prevent hanging
-    const timeout = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setIsLoading(false);
       setError('Request timed out after 15 seconds. Please try again.');
     }, 15000);
@@ -125,18 +116,15 @@ export function ConversationDetailsModal({
         .from('conversations')
         .select('conversation_id, app_name, created_at, summary')
         .eq('conversation_id', convId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to prevent errors
       
       if (conversationError) {
         console.error("Error fetching conversation:", conversationError);
-        if (conversationError.code === 'PGRST116') {
-          throw new Error("Conversation not found");
-        }
         throw conversationError;
       }
       
       if (!conversationData) {
-        throw new Error("No conversation data returned");
+        throw new Error("Conversation not found");
       }
       
       // Fetch the messages for this conversation
@@ -152,21 +140,22 @@ export function ConversationDetailsModal({
       }
       
       // Clear the timeout since we've received a response
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
       
       console.log(`Found ${messagesData?.length || 0} messages for conversation ${convId}`);
       
       // Update state with the fetched data
       setAppName(conversationData.app_name || 'Unknown App');
-      setStartTime(new Date(conversationData.created_at).toLocaleString());
-      setConversationMessages(messagesData.map(msg => formatMessage(msg)));
+      setStartTime(new Date(conversationData.created_at || '').toLocaleString());
+      setConversationMessages((messagesData || []).map(msg => formatMessage(msg)));
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error in fetchConversationData:', err);
-      setError('Failed to load conversation details');
+      setError(err.message || 'Failed to load conversation details');
       setConversationMessages([]);
     } finally {
       setIsLoading(false);
+      clearTimeout(timeoutId); // Make sure timeout is cleared in all cases
     }
   };
 
