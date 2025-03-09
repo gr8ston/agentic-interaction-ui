@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,11 +19,35 @@ const formatMessage = (message: any): ConversationMessage => {
   let outputTokens = 0;
   
   if (message.tokens_consumed && typeof message.tokens_consumed === 'object') {
-    // New JSON format with input and output fields
-    inputTokens = message.tokens_consumed.input || 0;
-    outputTokens = message.tokens_consumed.output || 0;
-    
-    console.log(`Extracted tokens from JSON: input=${inputTokens}, output=${outputTokens}`);
+    // Check for OpenAI format with prompt_tokens and completion_tokens
+    if ('prompt_tokens' in message.tokens_consumed && 'completion_tokens' in message.tokens_consumed) {
+      inputTokens = message.tokens_consumed.prompt_tokens || 0;
+      outputTokens = message.tokens_consumed.completion_tokens || 0;
+      
+      console.log(`Extracted tokens from OpenAI format: input=${inputTokens}, output=${outputTokens}`);
+    }
+    // Check for our standard format with input and output fields
+    else if ('input' in message.tokens_consumed && 'output' in message.tokens_consumed) {
+      inputTokens = message.tokens_consumed.input || 0;
+      outputTokens = message.tokens_consumed.output || 0;
+      
+      console.log(`Extracted tokens from standard format: input=${inputTokens}, output=${outputTokens}`);
+    }
+    // If it's some other object format, try to extract whatever is available
+    else {
+      console.log(`Unknown token format: ${JSON.stringify(message.tokens_consumed)}`);
+      inputTokens = Object.values(message.tokens_consumed).reduce((sum: number, val: any) => 
+        sum + (typeof val === 'number' ? val : 0), 0);
+      
+      // Split the total based on role (33% input, 67% output for AI messages)
+      if (message.role === 'system' || message.role === 'agent') {
+        const total = inputTokens;
+        inputTokens = Math.floor(total * 0.33);
+        outputTokens = Math.floor(total * 0.67);
+      } else {
+        outputTokens = 0; // For user messages, all tokens are input
+      }
+    }
   } else if (message.tokens_consumed && typeof message.tokens_consumed === 'number') {
     // Old integer format - split based on role
     if (message.role === 'system' || message.role === 'agent') {
@@ -35,15 +60,6 @@ const formatMessage = (message: any): ConversationMessage => {
       console.log(`Integer tokens for user: input=${inputTokens}, output=${outputTokens}`);
     }
   }
-  
-  console.log('Message data from DB:', {
-    id: message.message_id,
-    role: message.role,
-    latency: message.latency_ms ? `${message.latency_ms}ms` : 'null',
-    tokens_raw: message.tokens_consumed,
-    tokens_formatted: { input: inputTokens, output: outputTokens },
-    tokens_type: typeof message.tokens_consumed
-  });
   
   return {
     id: message.message_id,
@@ -138,63 +154,6 @@ export function ConversationDetailsModal({
       
       console.log(`Found ${messagesData?.length || 0} messages for conversation ${convId}`);
       
-      // Log token data types to help debug
-      if (messagesData && messagesData.length > 0) {
-        console.log("==== DETAILED TOKEN DATA DIAGNOSTICS ====");
-        
-        let systemMessagesCount = 0;
-        let systemMessagesWithTokens = 0;
-        let validJsonTokens = 0;
-        
-        messagesData.forEach((msg, index) => {
-          // Analyze JSON structure if present
-          let tokenStructure = 'No tokens data';
-          let hasValidJsonStructure = false;
-          
-          if (msg.tokens_consumed !== null) {
-            if (typeof msg.tokens_consumed === 'object') {
-              const keys = Object.keys(msg.tokens_consumed);
-              hasValidJsonStructure = keys.includes('input') && keys.includes('output');
-              tokenStructure = `JSON with keys: ${keys.join(', ')}`;
-              if (hasValidJsonStructure) {
-                validJsonTokens++;
-              }
-            } else {
-              tokenStructure = `Non-JSON value (${typeof msg.tokens_consumed}): ${msg.tokens_consumed}`;
-            }
-          }
-          
-          if (msg.role === 'system' || msg.role === 'agent') {
-            systemMessagesCount++;
-            if (msg.tokens_consumed !== null) {
-              systemMessagesWithTokens++;
-            }
-            
-            console.log(`Message ${index + 1} (${msg.role}):`, {
-              value: msg.tokens_consumed,
-              type: typeof msg.tokens_consumed,
-              isNull: msg.tokens_consumed === null,
-              structure: tokenStructure,
-              validJson: hasValidJsonStructure,
-              expected: 'System/agent message should have token data as a JSON object with input and output fields'
-            });
-          } else {
-            console.log(`Message ${index + 1} (${msg.role}):`, {
-              value: msg.tokens_consumed,
-              expected: 'User message should have NULL tokens data'
-            });
-          }
-        });
-        
-        // Summary statistics
-        console.log("==== TOKEN DATA SUMMARY ====");
-        console.log(`Total messages: ${messagesData.length}`);
-        console.log(`System/agent messages: ${systemMessagesCount}`);
-        console.log(`System/agent messages with tokens: ${systemMessagesWithTokens}`);
-        console.log(`Messages with valid JSON token structure: ${validJsonTokens}`);
-        console.log("============================");
-      }
-      
       // Update state with the fetched data
       setAppName(conversationData.app_name || 'Unknown App');
       setStartTime(new Date(conversationData.created_at).toLocaleString());
@@ -213,7 +172,7 @@ export function ConversationDetailsModal({
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex flex-row items-center justify-between">
           <div>
             <DialogTitle className="text-xl flex items-center gap-2">
@@ -232,7 +191,7 @@ export function ConversationDetailsModal({
           </Button>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4 my-4">
+        <ScrollArea className="flex-1 pr-4 my-4 h-[50vh]">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
