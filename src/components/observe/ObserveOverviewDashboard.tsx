@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { ArrowUp, ArrowDown, Users, MessageSquare, Activity, Clock, RefreshCw, Bug, Database, X } from "lucide-react";
@@ -727,4 +728,360 @@ TABLE DATA:
 
   // Format the tokens consumed for display
   const formatTokens = (tokens: number): string => {
-    if (tokens >=
+    if (tokens >= 1000) {
+      return `${(tokens / 1000).toFixed(1)}k`;
+    }
+    return tokens.toString();
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header section */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Conversation Analytics</h2>
+          <p className="text-muted-foreground">Track and analyze AI conversations across your platform</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-1">
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Last updated: {lastRefresh.toLocaleTimeString()}
+          </span>
+        </div>
+      </div>
+
+      {/* Key metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Conversations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center">
+              <div className="text-2xl font-bold">{metrics.totalConversations}</div>
+              <div className="flex items-center">
+                {metrics.conversationsChange > 0 ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.conversationsChange)}%
+                  </Badge>
+                ) : metrics.conversationsChange < 0 ? (
+                  <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.conversationsChange)}%
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">0%</Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">vs previous period</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Messages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center">
+              <div className="text-2xl font-bold">{metrics.totalMessages}</div>
+              <div className="flex items-center">
+                {metrics.messagesChange > 0 ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.messagesChange)}%
+                  </Badge>
+                ) : metrics.messagesChange < 0 ? (
+                  <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.messagesChange)}%
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">0%</Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">vs previous period</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Average Response Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center">
+              <div className="text-2xl font-bold">{metrics.averageLatency.toFixed(0)}ms</div>
+              <div className="flex items-center">
+                {metrics.latencyChange > 0 ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.latencyChange)}%
+                  </Badge>
+                ) : metrics.latencyChange < 0 ? (
+                  <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.latencyChange)}%
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">0%</Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">vs previous period</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tokens Consumed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center">
+              <div className="text-2xl font-bold">{formatTokens(metrics.totalTokensConsumed)}</div>
+              <div className="flex items-center">
+                {metrics.tokensChange > 0 ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.tokensChange)}%
+                  </Badge>
+                ) : metrics.tokensChange < 0 ? (
+                  <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                    {Math.abs(metrics.tokensChange)}%
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">0%</Badge>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">vs previous period</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Conversation Trends */}
+        <Card className="min-h-[330px]">
+          <CardHeader>
+            <CardTitle>Conversation Trends</CardTitle>
+            <CardDescription>Conversations over the past 7 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={conversationTrends}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value) => [`${value} conversations`, 'Volume']}
+                    labelFormatter={(label) => `${label}`}
+                  />
+                  <Bar dataKey="value" fill="#007ACC" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* App Usage Distribution */}
+        <Card className="min-h-[330px]">
+          <CardHeader>
+            <CardTitle>App Usage Distribution</CardTitle>
+            <CardDescription>Conversation distribution by app</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={appUsage}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {appUsage.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`${value} conversations (${appUsage.find(item => item.name === name)?.percentage || 0}%)`, name]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Recent Conversations Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Conversations</CardTitle>
+          <CardDescription>The most recent conversations across your platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Conversation ID</TableHead>
+                <TableHead>App</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Tokens</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <div className="flex justify-center py-4">
+                      <div className="animate-pulse flex space-x-4">
+                        <div className="flex-1 space-y-4 py-1">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded"></div>
+                            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : recentConversations.length > 0 ? (
+                recentConversations.map((conversation) => (
+                  <TableRow key={conversation.id}>
+                    <TableCell className="font-mono text-xs">
+                      {conversation.id.substring(0, 8)}...
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{conversation.app}</Badge>
+                    </TableCell>
+                    <TableCell>{conversation.time}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{conversation.status}</Badge>
+                    </TableCell>
+                    <TableCell>{formatTokens(conversation.tokens)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleConversationClick(conversation.id)}
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                    No conversations found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
+      {/* Debug Section (only visible in development) */}
+      <div className="flex flex-col space-y-4">
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={runDebugQueries}>
+            <Bug className="mr-2 h-4 w-4" />
+            Run Debug Queries
+          </Button>
+          <Button variant="outline" size="sm" onClick={seedDemoData}>
+            <Database className="mr-2 h-4 w-4" />
+            Seed Demo Data
+          </Button>
+        </div>
+        
+        {seedingStatus && (
+          <div className="bg-gray-50 p-4 rounded border">
+            <h3 className="font-medium mb-2">Seeding Status</h3>
+            <p>{seedingStatus}</p>
+          </div>
+        )}
+        
+        {debugInfo && (
+          <div className="bg-gray-50 p-4 rounded border relative">
+            <h3 className="font-medium mb-2">Debug Information</h3>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-2 right-2"
+              onClick={() => setDebugInfo("")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <pre className="text-xs overflow-auto max-h-[400px] p-2 bg-white rounded">
+              {debugInfo}
+            </pre>
+          </div>
+        )}
+      </div>
+      
+      {/* Conversation Details Modal */}
+      {isModalOpen && selectedConversation && (
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>Conversation Details</DialogTitle>
+              <DialogDescription>
+                ID: {selectedConversation.conversationId} | App: {selectedConversation.app} | Created: {selectedConversation.created}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="overflow-y-auto max-h-[60vh] pr-4">
+              {selectedConversation.messages.map((message, index) => (
+                <div key={message.id} className={`mb-4 pb-4 ${index !== selectedConversation.messages.length - 1 ? "border-b" : ""}`}>
+                  <div className="flex justify-between mb-2">
+                    <div className="flex items-center">
+                      <Badge variant={message.role === "user" ? "outline" : "secondary"} className="mr-2">
+                        {message.role === "user" ? "User" : "AI"}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">{message.created}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      {message.latency !== null && (
+                        <span className="mr-3 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {message.latency}ms
+                        </span>
+                      )}
+                      {message.tokens !== null && (
+                        <span className="flex items-center">
+                          <Activity className="h-3 w-3 mr-1" />
+                          {message.tokens} tokens
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="whitespace-pre-wrap text-sm">
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
