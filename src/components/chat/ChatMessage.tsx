@@ -1,4 +1,3 @@
-
 import { ConversationMessage } from "@/types/api";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -20,9 +19,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface ChatMessageProps {
   message: ConversationMessage;
+  developerMode?: boolean;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, developerMode = false }: ChatMessageProps) {
   const isUser = message.role === "user";
   const formattedTime = formatDistanceToNow(new Date(message.timestamp), {
     addSuffix: true,
@@ -95,15 +95,24 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
                       <div className="space-y-3 text-sm">
+                        {developerMode && (
+                          <div>
+                            <h4 className="font-medium text-brand-primary mb-1">Initial Prompt</h4>
+                            <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100">
+                              {message.verbose.promptForComposition}
+                            </p>
+                          </div>
+                        )}
+                        
                         <div>
-                          <h4 className="font-medium text-brand-primary mb-1">Initial Prompt</h4>
+                          <h4 className="font-medium text-brand-primary mb-1">Reasoning Process</h4>
                           <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100">
-                            {message.verbose.promptForComposition}
+                            This query was processed using a reasoning algorithm to determine the appropriate function calls.
                           </p>
                         </div>
                         
                         <div>
-                          <h4 className="font-medium text-brand-primary mb-1">Reasoning Process</h4>
+                          <h4 className="font-medium text-brand-primary mb-1">Function Composition</h4>
                           <div className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">
                             <code className="font-mono text-sm">
                               {message.verbose.composition}
@@ -114,18 +123,22 @@ export function ChatMessage({ message }: ChatMessageProps) {
                         {message.verbose.rawResults && (
                           <div>
                             <h4 className="font-medium text-brand-primary mb-1">Raw Results</h4>
-                            <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 font-mono text-sm">
-                              {message.verbose.rawResults}
-                            </p>
+                            <pre className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 font-mono text-sm overflow-auto max-h-[300px]">
+                              {typeof message.verbose.rawResults === 'string' 
+                                ? message.verbose.rawResults 
+                                : JSON.stringify(message.verbose.rawResults, null, 2)}
+                            </pre>
                           </div>
                         )}
                         
-                        <div>
-                          <h4 className="font-medium text-brand-primary mb-1">Enhanced Prompt</h4>
-                          <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">
-                            {message.verbose.promptForEnhancedResponse}
-                          </p>
-                        </div>
+                        {developerMode && (
+                          <div>
+                            <h4 className="font-medium text-brand-primary mb-1">Enhanced Prompt</h4>
+                            <p className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-100 whitespace-pre-wrap">
+                              {message.verbose.promptForEnhancedResponse}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>

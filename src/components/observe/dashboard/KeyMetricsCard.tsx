@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
@@ -25,9 +24,10 @@ export function KeyMetricsCard({
   
   // Determine text to display alongside the percentage
   let changeText = isPositive ? 'increase' : isNegative ? 'slower' : '';
+  let isResponseTime = title.toLowerCase().includes('response time') || title.toLowerCase().includes('latency');
   
   // For response time specifically, "slower" is negative and "faster" is positive
-  if (title.toLowerCase().includes('response time') || title.toLowerCase().includes('latency')) {
+  if (isResponseTime) {
     changeText = isPositive ? 'slower' : isNegative ? 'faster' : '';
   }
   
@@ -43,14 +43,22 @@ export function KeyMetricsCard({
           </div>
           <div className="flex items-center text-sm">
             {isPositive && (
-              <div className="flex items-center text-green-600">
-                <ArrowUp className="h-3 w-3 mr-1" />
+              <div className={`flex items-center ${isResponseTime ? 'text-red-600' : 'text-green-600'}`}>
+                {isResponseTime ? (
+                  <ArrowDown className="h-3 w-3 mr-1" />
+                ) : (
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                )}
                 <span>{Math.abs(roundedPercentage)}% {changeText}</span>
               </div>
             )}
             {isNegative && (
-              <div className="flex items-center text-red-600">
-                <ArrowDown className="h-3 w-3 mr-1" />
+              <div className={`flex items-center ${isResponseTime ? 'text-green-600' : 'text-red-600'}`}>
+                {isResponseTime ? (
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                ) : (
+                  <ArrowDown className="h-3 w-3 mr-1" />
+                )}
                 <span>{Math.abs(roundedPercentage)}% {changeText}</span>
               </div>
             )}

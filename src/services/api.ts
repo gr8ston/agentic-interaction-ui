@@ -1,7 +1,13 @@
 import { AuthResponse, ConversationRequest, ConversationResponse, Tool, User } from '@/types/api';
 
 // Base URL for API calls - replace with actual API endpoint
-const API_BASE_URL = 'https://api.example.com';
+const API_BASE_URL = 'http://0.0.0.0:8000';
+
+// Set this to false to use the real API
+const USE_MOCK_DATA = false;
+
+// Use mock data for authentication but real data for other services
+const USE_MOCK_AUTH = true;
 
 // Mock data for development
 const MOCK_TOOLS: Tool[] = [
@@ -49,9 +55,6 @@ const MOCK_TOOLS: Tool[] = [
   }
 ];
 
-// Check if we're in development mode to use mock data
-const USE_MOCK_DATA = true;
-
 // Helper for making authenticated requests
 const authFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('auth_token');
@@ -82,7 +85,7 @@ const authFetch = async (endpoint: string, options: RequestInit = {}) => {
 export const authService = {
   // Login function
   login: async (credentials: User): Promise<AuthResponse> => {
-    if (USE_MOCK_DATA) {
+    if (USE_MOCK_AUTH) {
       // Simulate API call with mock data
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -153,8 +156,51 @@ export const toolsService = {
       });
     }
     
-    return authFetch('/api/tools');
+    try {
+      const response = await fetch(`${API_BASE_URL}/tools`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tools');
+      }
+      
+      const data = await response.json();
+      
+      // Map the array of tool names to the expected Tool interface format
+      return data.tools.map((toolName: string, index: number) => ({
+        id: `tool-${index}`,
+        name: toolName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        description: `Execute the ${toolName} function`,
+        icon: getToolIcon(toolName),
+      }));
+    } catch (error) {
+      console.error('Error fetching tools:', error);
+      return [];
+    }
   },
+};
+
+// Helper function to assign icons based on tool name
+const getToolIcon = (toolName: string): string => {
+  const iconMappings: Record<string, string> = {
+    'write_email': 'file-text',
+    'create_travel_guide': 'file-text',
+    'compare_destinations': 'file-text',
+    'get_current_date': 'calendar',
+    'get_forecast': 'cloud',
+    'get_distance': 'map',
+    'find_hotels': 'home',
+    'get_attractions': 'map-pin',
+    'get_property_id_by_name': 'search',
+    'predict_demand_for_resort': 'chart',
+    'check_availability': 'calendar',
+  };
+  
+  return iconMappings[toolName] || 'help-circle';
 };
 
 // Conversation services
@@ -201,10 +247,45 @@ export const conversationService = {
       });
     }
     
-    return authFetch('/api/conversation', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+    try {
+      // Map the request to the format expected by the real API
+      const apiRequest = {
+        conversation_id: request.conversation_id || null,
+        user_id: 'demo', // Hardcoded user ID for now, can be made dynamic
+        question: request.question
+      };
+      
+      const response = await fetch(`${API_BASE_URL}/api/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiRequest),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to get response');
+      }
+      
+      const data = await response.json();
+      
+      // Map the API response to our expected ConversationResponse format
+      return {
+        conversation_id: data.conversation_id,
+        message_id: `m${Date.now()}`, // Generate a message ID since API might not provide one
+        answer: data.answer,
+        tokens_consumed: data.tokens_consumed,
+        latency_taken: data.latency_taken,
+        prompt_for_composition: data.prompt_for_composition,
+        composition: data.composition,
+        prompt_for_enhanced_response: data.prompt_for_enhanced_response,
+        raw_results: data.raw_results
+      };
+    } catch (error) {
+      console.error('Error sending message to API:', error);
+      throw error;
+    }
   },
 };
 

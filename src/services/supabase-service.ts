@@ -417,18 +417,31 @@ export const supabaseService = {
   // Get app usage distribution (for pie chart)
   async getAppUsageDistribution(): Promise<AppUsageMetric[]> {
     try {
-      // Use the same 7-day filter as other metrics
+      console.log("=== STARTING getAppUsageDistribution() ===");
+      
+      // Set date range for last 7 days
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 7);
       
+      console.log(`Fetching app usage for date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      
+      // Query conversations with date filtering
       const { data, error } = await supabase
         .from('conversations')
         .select('app_name')
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
       
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
+      console.log("Raw database response:", {
+        dataLength: data?.length || 0,
+        sampleData: data?.slice(0, 3)
+      });
       
       // Count conversations by app name
       const appCounts: { [key: string]: number } = {};
@@ -437,14 +450,19 @@ export const supabaseService = {
         appCounts[appName] = (appCounts[appName] || 0) + 1;
       });
       
+      console.log("Processed app counts:", appCounts);
+      
       // Format for chart
       const appUsageData = Object.entries(appCounts).map(([name, value]) => ({
         name,
         value
       }));
       
+      console.log("Final formatted data:", appUsageData);
+      
       // If no data, return demo data
       if (appUsageData.length === 0) {
+        console.log("No data found, returning demo data");
         return [
           { name: 'weather_app', value: 2 },
           { name: 'travel_planner', value: 2 },
@@ -456,8 +474,8 @@ export const supabaseService = {
       
       return appUsageData;
     } catch (error) {
-      console.error('Error fetching app usage distribution:', error);
-      // Return demo data from our database exploration
+      console.error('Error in getAppUsageDistribution:', error);
+      // Return demo data if there's an error
       return [
         { name: 'weather_app', value: 2 },
         { name: 'travel_planner', value: 2 },
@@ -1013,10 +1031,16 @@ export const supabaseService = {
       }
       
       if (!outliers || outliers.length === 0) {
+        console.log("No outliers found above threshold", THRESHOLD_MS);
         return { outlierData: [], thresholdValue: THRESHOLD_MS };
       }
       
       console.log(`Found ${outliers.length} outliers above ${THRESHOLD_MS}ms threshold`);
+      console.log("Sample outlier data:", {
+        firstOutlier: outliers[0],
+        tokensExample: outliers[0]?.tokens_consumed,
+        tokensType: outliers[0]?.tokens_consumed ? typeof outliers[0].tokens_consumed : 'undefined'
+      });
       
       // Get conversation IDs to fetch app names
       const conversationIds = outliers.map(m => m.conversation_id);
@@ -1041,30 +1065,33 @@ export const supabaseService = {
         let tokenUsage = 0;
         try {
           const tokens = item.tokens_consumed;
-          if (tokens) {
-            if (typeof tokens === 'object' && tokens !== null) {
-              // Handle JSON format
-              const inputTokens = (tokens as any).input ? Number((tokens as any).input) : 0;
-              const outputTokens = (tokens as any).output ? Number((tokens as any).output) : 0;
-              tokenUsage = inputTokens + outputTokens;
-            } else if (typeof tokens === 'number') {
-              tokenUsage = tokens;
-            } else if (typeof tokens === 'string') {
-              tokenUsage = parseInt(tokens, 10) || 0;
-            }
+          console.log("Processing tokens for message:", {
+            messageId: item.message_id,
+            tokensRaw: tokens,
+            tokensType: typeof tokens,
+            isObject: tokens && typeof tokens === 'object'
+          });
+          
+          if (tokens && typeof tokens === 'object') {
+            // Handle JSON format with input and output fields
+            tokenUsage = (tokens.input || 0) + (tokens.output || 0);
+            console.log("Calculated token usage:", {
+              messageId: item.message_id,
+              input: tokens.input,
+              output: tokens.output,
+              total: tokenUsage
+            });
           }
         } catch (e) {
-          console.warn("Error parsing tokens:", e);
+          console.warn("Error parsing tokens for message:", item.message_id, e);
         }
         
         // Determine probable cause
-        let cause = 'Unknown';
+        let resource = 'Unusual processing time';
         if (tokenUsage > 2000) {
-          cause = 'High token usage';
+          resource = 'High token usage';
         } else if (item.content && item.content.length > 2000) {
-          cause = 'Long message content';
-        } else {
-          cause = 'Unusual processing time';
+          resource = 'Long message content';
         }
         
         // Return formatted record
@@ -1073,14 +1100,14 @@ export const supabaseService = {
           conversationId: item.conversation_id,
           timestamp: new Date(item.created_at).toLocaleString(),
           latency: item.latency_ms,
-          provider: item.llm_provider,
           model: item.llm_model,
           tokens: tokenUsage,
-          app: appNameMap[item.conversation_id] || 'Unknown',
-          resource: cause
+          resource: resource,
+          app: appNameMap[item.conversation_id] || 'Unknown'
         };
       });
       
+      console.log("Final outlier data:", outlierData);
       return { outlierData, thresholdValue: THRESHOLD_MS };
     } catch (error) {
       console.error("Exception in getLatencyOutliers:", error);

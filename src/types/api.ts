@@ -1,4 +1,3 @@
-
 export interface User {
   username: string;
   password: string;
@@ -34,7 +33,7 @@ export interface ConversationMessage {
     promptForComposition: string;
     composition: string;
     promptForEnhancedResponse: string;
-    rawResults?: string;
+    rawResults?: any;
   };
 }
 

@@ -26,39 +26,48 @@ export function useDashboardData() {
   const getAppUsageDistribution = async (): Promise<ExtendedAppUsageMetric[]> => {
     try {
       console.log("Fetching app usage distribution from Supabase");
-      // Query conversations grouped by app_name
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
+      // Set date range for last 7 days
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7);
+      
+      console.log(`Fetching app usage for date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      
+      // Query conversations with date filtering
       const { data, error } = await supabase
         .from('conversations')
         .select('app_name')
-        .gte('created_at', sevenDaysAgo.toISOString());
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
       
       if (error) throw error;
       
       // Process the results to count by app_name
       const appCounts: Record<string, number> = {};
+      let totalConversations = 0;
+      
       if (data) {
         data.forEach(item => {
           const appName = item.app_name || 'unknown';
           appCounts[appName] = (appCounts[appName] || 0) + 1;
+          totalConversations++;
         });
       }
       
-      // Convert to the expected format
+      // Convert to the expected format with percentages
       const formattedData: ExtendedAppUsageMetric[] = Object.entries(appCounts).map(([name, value]) => ({
         name,
         value,
-        percentage: 0 // Will calculate after summing
+        percentage: totalConversations > 0 ? Math.round((value / totalConversations) * 100) : 0
       }));
       
-      // Calculate percentage for each app
-      const totalConversations = formattedData.reduce((sum, app) => sum + app.value, 0);
-      return formattedData.map(app => ({
-        ...app,
-        percentage: totalConversations > 0 ? (app.value / totalConversations) * 100 : 0
-      }));
+      console.log("App usage data:", {
+        totalConversations,
+        formattedData
+      });
+      
+      return formattedData;
     } catch (error) {
       console.error("Error in getAppUsageDistribution:", error);
       return [];
@@ -369,7 +378,19 @@ export function useDashboardData() {
       
       if (results[2].status === 'fulfilled') {
         console.log("App usage data received:", results[2].value);
-        setAppUsage(results[2].value);
+        if (results[2].value && results[2].value.length > 0) {
+          setAppUsage(results[2].value);
+        } else {
+          console.log("No app usage data found, using fallback");
+          setAppUsage([
+            { name: 'travel_planner', value: 90, percentage: 64 },
+            { name: 'weather_app', value: 23, percentage: 16 },
+            { name: 'shopping_assistant', value: 23, percentage: 16 },
+            { name: 'summarization_test_app', value: 1, percentage: 1 },
+            { name: 'auto_conversation_test_app', value: 4, percentage: 3 }
+          ]);
+          setHasError(true);
+        }
       } else {
         console.error("Error fetching app usage:", results[2].reason);
         setAppUsage([

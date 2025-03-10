@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Tool } from "@/types/api";
 import { toolsService } from "@/services/api";
@@ -16,7 +15,12 @@ import {
   Menu,
   X,
   MapPin,
-  Flag
+  Flag,
+  Calendar,
+  Cloud,
+  Map,
+  Home,
+  BarChart as Chart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +45,16 @@ const getIconByName = (iconName: string): LucideIcon => {
       return MapPin;
     case 'flag':
       return Flag;
+    case 'calendar':
+      return Calendar;
+    case 'cloud':
+      return Cloud;
+    case 'map':
+      return Map;
+    case 'home':
+      return Home;
+    case 'chart':
+      return Chart;
     default:
       return HelpCircle;
   }
